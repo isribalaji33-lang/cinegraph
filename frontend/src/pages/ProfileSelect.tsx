@@ -54,11 +54,11 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
+      className="min-h-screen w-full flex flex-col items-center justify-start sm:justify-center py-6 sm:py-10 px-4 overflow-y-auto"
       style={{ background: '#050507' }}
     >
       {/* ── Animated ambient orbs ── */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute w-[600px] h-[600px] rounded-full opacity-10 blur-3xl animate-float"
              style={{ background: 'radial-gradient(#e50914, transparent)', top: '-20%', left: '-10%' }} />
         <div className="absolute w-[500px] h-[500px] rounded-full opacity-8 blur-3xl"
@@ -69,13 +69,13 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
                       animation: 'float 5s ease-in-out infinite', animationDelay: '1s' }} />
       </div>
 
-      {/* ── Logo ── */}
-      <div className="mb-10 flex flex-col items-center gap-3 fade-in">
+      {/* ── CineGraph Title Card ── */}
+      <div className="mb-4 sm:mb-6 flex flex-col items-center gap-2.5 z-10 fade-in pt-2">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#e50914] flex items-center justify-center shadow-lg shadow-red-900/60">
-            <Film className="w-7 h-7 text-white" />
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#e50914] flex items-center justify-center shadow-lg shadow-red-900/60 ring-1 ring-red-500/40">
+            <Film className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </div>
-          <span className="text-3xl font-black font-heading text-white tracking-tight">
+          <span className="text-3xl sm:text-4xl font-black font-heading text-white tracking-tight">
             Cine<span style={{ color: '#e50914' }}>Graph</span>
           </span>
         </div>
@@ -86,28 +86,28 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
       </div>
 
       {/* ── Who's watching? ── */}
-      <h1 className="text-2xl sm:text-3xl font-bold font-heading text-white mb-10 fade-in"
+      <h1 className="text-xl sm:text-2xl font-bold font-heading text-white mb-5 sm:mb-7 fade-in z-10"
           style={{ animationDelay: '0.1s' }}>
         Who's watching?
       </h1>
 
       {/* ── Profile Grid ── */}
       {loading ? (
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-5">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-4 z-10">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-3">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl shimmer" />
-              <div className="w-16 h-3 rounded shimmer" />
+            <div key={i} className="flex flex-col items-center gap-2">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl shimmer" />
+              <div className="w-14 h-3 rounded shimmer" />
             </div>
           ))}
         </div>
       ) : (
         <div
-          className="grid gap-4 sm:gap-5 px-4 fade-in"
+          className="grid gap-3 sm:gap-4.5 px-2 fade-in z-10"
           style={{
             gridTemplateColumns: `repeat(${Math.min(users.length, 5)}, minmax(0, 1fr))`,
             animationDelay: '0.2s',
-            maxWidth: 720,
+            maxWidth: 680,
           }}
         >
           {users.map((user, idx) => {
@@ -119,11 +119,11 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
               <button
                 key={user.user_id}
                 onClick={() => handleClick(user.user_id)}
-                className="group flex flex-col items-center gap-3 focus:outline-none"
+                className="group flex flex-col items-center gap-2 focus:outline-none cursor-pointer"
               >
                 {/* Avatar */}
                 <div
-                  className={`relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden transition-all duration-300 ${
+                  className={`relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden transition-all duration-300 ${
                     isSelected
                       ? 'scale-95 ring-4 ring-[#e50914] ring-offset-4 ring-offset-[#050507]'
                       : 'group-hover:scale-105 group-hover:ring-2 ring-white/30 ring-offset-2 ring-offset-[#050507]'
@@ -145,38 +145,38 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
 
                   {/* Initial letter */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-4xl sm:text-5xl font-black font-heading text-white/90 select-none"
+                    <span className="text-3xl sm:text-4xl font-black font-heading text-white/90 select-none"
                           style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
                       {user.username?.[0]?.toUpperCase()}
                     </span>
                   </div>
 
                   {/* Country flag */}
-                  <span className="absolute top-2 right-2 text-lg leading-none">{flag}</span>
+                  <span className="absolute top-1.5 right-1.5 text-base sm:text-lg leading-none">{flag}</span>
 
                   {/* Cold start badge */}
                   {user.is_cold_start && (
-                    <span className="absolute bottom-2 left-2 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/80 text-black">
+                    <span className="absolute bottom-1.5 left-1.5 text-[8px] font-mono font-bold px-1 py-0.2 rounded bg-amber-500/80 text-black">
                       NEW
                     </span>
                   )}
 
                   {/* Selected overlay */}
                   {isSelected && (
-                    <div className="absolute inset-0 bg-[#e50914]/20 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[#e50914]/25 flex items-center justify-center">
                       <ChevronRight className="w-8 h-8 text-white animate-pulse" />
                     </div>
                   )}
                 </div>
 
                 {/* Name */}
-                <div className="text-center">
-                  <p className={`text-sm font-semibold transition-colors duration-200 ${
+                <div className="text-center max-w-[110px]">
+                  <p className={`text-xs sm:text-sm font-semibold truncate transition-colors duration-200 ${
                     isSelected ? 'text-[#e50914]' : 'text-[#a3a3b3] group-hover:text-white'
                   }`}>
                     {user.username}
                   </p>
-                  <p className="text-[10px] text-[#5a5a6e] mt-0.5">
+                  <p className="text-[9px] sm:text-[10px] text-[#5a5a6e] mt-0.5 truncate">
                     {user.country} · Age {user.age}
                   </p>
                 </div>
@@ -187,12 +187,12 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
       )}
 
       {/* ── Footer hint ── */}
-      <p className="mt-12 text-sm text-[#5a5a6e] fade-in" style={{ animationDelay: '0.3s' }}>
+      <p className="mt-6 sm:mt-8 text-xs sm:text-sm text-[#5a5a6e] fade-in z-10 text-center" style={{ animationDelay: '0.3s' }}>
         Select a profile to personalize your recommendations
       </p>
 
       {/* ── Bottom branding ── */}
-      <div className="absolute bottom-6 text-[11px] text-[#2a2a3a] font-mono">
+      <div className="mt-4 mb-2 text-[11px] text-[#2a2a3a] font-mono z-10 text-center">
         CineGraph © 2026 — DBMS Academic Project · Neo4j 5.x
       </div>
     </div>
