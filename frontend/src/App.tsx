@@ -17,29 +17,39 @@ export const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#08090d] text-slate-100 flex flex-col font-sans">
+      <div className="min-h-screen" style={{ background: '#0a0a0f', color: '#f5f5f1' }}>
         <Navbar currentUser={currentUser} onUserChange={setCurrentUser} />
 
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <main className="max-w-[1400px] w-full mx-auto px-4 sm:px-6">
           <Routes>
-            <Route path="/" element={<Home currentUser={currentUser} />} />
+            <Route path="/"              element={<Home currentUser={currentUser} />} />
             <Route path="/recommendations" element={<Recommendations currentUser={currentUser} />} />
-            <Route path="/lab" element={<LiveLab />} />
-            <Route path="/compare" element={<CompareUsers />} />
-            <Route path="/ml-eval" element={<MLEvaluation />} />
-            <Route path="/explore" element={<GraphExplorer />} />
-            <Route path="/movies/:id" element={<MovieDetails currentUser={currentUser} />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/admin" element={<AdminExplorer />} />
-            <Route path="/profile" element={<Profile currentUser={currentUser} />} />
+            <Route path="/lab"           element={<LiveLab />} />
+            <Route path="/compare"       element={<CompareUsers />} />
+            <Route path="/ml-eval"       element={<MLEvaluation />} />
+            <Route path="/explore"       element={<GraphExplorer />} />
+            <Route path="/movies/:id"    element={<MovieDetails currentUser={currentUser} />} />
+            <Route path="/analytics"     element={<Analytics />} />
+            <Route path="/admin"         element={<AdminExplorer />} />
+            <Route path="/profile"       element={<Profile currentUser={currentUser} />} />
           </Routes>
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-cine-border/50 py-6 text-center text-xs text-slate-500 font-mono">
-          <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>CineGraph © 2026 — An Intelligent Movie Recommendation System with Neo4j & ML</span>
-            <span className="text-slate-400">DBMS Academic Project • Primary Database: Neo4j 5.x Bolt</span>
+        <footer className="mt-16 border-t border-white/5">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-[#e50914] flex items-center justify-center text-white text-xs font-bold">C</div>
+              <span className="text-sm text-[#5a5a6e]">
+                <span className="text-white font-semibold">CineGraph</span> © 2026 — Neo4j-Powered Movie Recommendation System
+              </span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-[#5a5a6e] font-mono">
+              <span>DBMS Academic Project</span>
+              <span className="w-1 h-1 rounded-full bg-[#5a5a6e]" />
+              <span>Neo4j 5.x Bolt</span>
+              <span className="w-1 h-1 rounded-full bg-[#5a5a6e]" />
+              <span>FastAPI + Vite React</span>
+            </div>
           </div>
         </footer>
       </div>

@@ -1,83 +1,153 @@
 """
 Analytics API Router for CineGraph.
+ALL data is sourced exclusively from live Neo4j via Cypher queries.
 Provides high-level database metrics, popular genres, frequent co-starring pairs,
 director performance rankings, and graph connectivity stats.
 """
 
-from typing import Dict, List, Any
-from fastapi import APIRouter
-from backend.seed.seed_data import MOVIES, GENRES, DIRECTORS, ACTORS, USERS
+from fastapi import APIRouter, HTTPException
 from backend.db.connection import get_driver, is_neo4j_live
 from backend.config import settings
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
 
+
 @router.get("/overview")
 def get_analytics_overview():
-    # 1. Total counts
-    node_counts = {
-        "Users": len(USERS),
-        "Movies": len(MOVIES),
-        "Directors": len(DIRECTORS),
-        "Actors": len(ACTORS),
-        "Genres": len(GENRES),
-        "Studios": 15,
-        "Awards": 15,
-        "Reviews": 15
-    }
+    if not is_neo4j_live():
+        raise HTTPException(status_code=503, detail="Live Neo4j instance required.")
 
-    # 2. Frequent Co-starring Pairs
-    co_stars = [
-        {"actor_1": "Leonardo DiCaprio", "actor_2": "Brad Pitt", "shared_movies": 2, "titles": ["Once Upon a Time in Hollywood", "The Departed"]},
-        {"actor_1": "Ryan Gosling", "actor_2": "Emma Stone", "shared_movies": 2, "titles": ["La La Land", "Barbie"]},
-        {"actor_1": "Christian Bale", "actor_2": "Tom Hardy", "shared_movies": 2, "titles": ["Gladiator", "Saving Private Ryan"]},
-        {"actor_1": "Charlize Theron", "actor_2": "Tom Hardy", "shared_movies": 2, "titles": ["Mad Max: Fury Road", "Furiosa: A Mad Max Saga"]},
-        {"actor_1": "Matthew McConaughey", "actor_2": "Amy Adams", "shared_movies": 2, "titles": ["Interstellar", "Arrival"]}
-    ]
+    driver = get_driver()
+    with driver.session(database=settings.NEO4J_DATABASE) as session:
 
-    # 3. Top Genres by Movie Representation
-    genre_freq = {}
-    for m in MOVIES:
-        for gid in m["genres"]:
-            gname = next((g["genre_name"] for g in GENRES if g["genre_id"] == gid), gid)
-            genre_freq[gname] = genre_freq.get(gname, 0) + 1
-    top_genres = sorted([{"genre": k, "movie_count": v} for k, v in genre_freq.items()], key=lambda x: x["movie_count"], reverse=True)
+        # 1. Node counts – straight from the graph
+        count_recs = session.run("""
+            CALL {
+                MATCH (u:User)    RETURN 'Users'     AS label, count(u) AS n
+                UNION ALL
+                MATCH (m:Movie)   RETURN 'Movies'    AS label, count(m) AS n
+                UNION ALL
+                MATCH (d:Director) RETURN 'Directors' AS label, count(d) AS n
+                UNION ALL
+                MATCH (a:Actor)   RETURN 'Actors'    AS label, count(a) AS n
+                UNION ALL
+                MATCH (g:Genre)   RETURN 'Genres'    AS label, count(g) AS n
+                UNION ALL
+                MATCH (s:Studio)  RETURN 'Studios'   AS label, count(s) AS n
+                UNION ALL
+                MATCH (r:Review)  RETURN 'Reviews'   AS label, count(r) AS n
+            }
+            RETURN label, n
+        """).data()
+        node_counts = {rec["label"]: rec["n"] for rec in count_recs}
 
-    # 4. Director Average Ratings
-    director_ratings = []
-    movie_map = {m["movie_id"]: m for m in MOVIES}
-    dir_groups = {}
-    for m in MOVIES:
-        d_id = m["director"]
-        dir_groups.setdefault(d_id, []).append(m)
+        # 2. Frequent co-starring pairs
+        co_recs = session.run("""
+            MATCH (a1:Actor)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(a2:Actor)
+            WHERE id(a1) < id(a2)
+            WITH a1, a2, collect(m.title) AS titles, count(m) AS shared
+            WHERE shared >= 2
+            RETURN a1.actor_name AS actor_1, a2.actor_name AS actor_2,
+                   shared AS shared_movies, titles
+            ORDER BY shared DESC
+            LIMIT 6
+        """).data()
+        co_stars = [
+            {
+                "actor_1": r["actor_1"],
+                "actor_2": r["actor_2"],
+                "shared_movies": r["shared_movies"],
+                "titles": r["titles"]
+            }
+            for r in co_recs
+        ]
 
-    for d in DIRECTORS:
-        d_id = d["director_id"]
-        d_movies = dir_groups.get(d_id, [])
-        director_ratings.append({
-            "director_id": d_id,
-            "director_name": d["director_name"],
-            "nationality": d["nationality"],
-            "movies_count": len(d_movies),
-            "avg_rating": 4.6 if d_id in ["d01", "d02", "d09"] else 4.2,
-            "sample_film": d_movies[0]["title"] if d_movies else ""
-        })
-    director_ratings.sort(key=lambda x: x["avg_rating"], reverse=True)
+        # 3. Top genres by movie count
+        genre_recs = session.run("""
+            MATCH (m:Movie)-[:HAS_GENRE]->(g:Genre)
+            RETURN g.genre_name AS genre, count(m) AS movie_count
+            ORDER BY movie_count DESC
+            LIMIT 15
+        """).data()
+        top_genres = [{"genre": r["genre"], "movie_count": r["movie_count"]} for r in genre_recs]
 
-    # 5. Highest-Rated Movies
-    top_movies = [
-        {"title": "Inception", "year": 2010, "avg_rating": 4.75, "ratings_count": 18, "director": "Christopher Nolan"},
-        {"title": "Interstellar", "year": 2014, "avg_rating": 4.70, "ratings_count": 19, "director": "Christopher Nolan"},
-        {"title": "Parasite", "year": 2019, "avg_rating": 4.65, "ratings_count": 16, "director": "Bong Joon-ho"},
-        {"title": "Mad Max: Fury Road", "year": 2015, "avg_rating": 4.60, "ratings_count": 17, "director": "George Miller"},
-        {"title": "Arrival", "year": 2016, "avg_rating": 4.58, "ratings_count": 18, "director": "Denis Villeneuve"},
-        {"title": "La La Land", "year": 2016, "avg_rating": 4.52, "ratings_count": 17, "director": "Damien Chazelle"},
-    ]
+        # 4. Director performance (avg rating from RATED edges)
+        dir_recs = session.run("""
+            MATCH (d:Director)<-[:DIRECTED_BY]-(m:Movie)
+            OPTIONAL MATCH ()-[r:RATED]->(m)
+            WITH d, m, avg(r.rating_value) AS movie_avg
+            WITH d,
+                 count(m) AS movies_count,
+                 round(avg(coalesce(movie_avg, 0)) * 100) / 100 AS avg_rating,
+                 collect(m.title)[0] AS sample_film
+            RETURN d.director_id AS director_id,
+                   d.director_name AS director_name,
+                   d.nationality AS nationality,
+                   movies_count, avg_rating, sample_film
+            ORDER BY avg_rating DESC
+            LIMIT 8
+        """).data()
+        top_directors = [
+            {
+                "director_id": r["director_id"],
+                "director_name": r["director_name"],
+                "nationality": r["nationality"],
+                "movies_count": r["movies_count"],
+                "avg_rating": float(r["avg_rating"] or 0),
+                "sample_film": r["sample_film"] or ""
+            }
+            for r in dir_recs
+        ]
+
+        # 5. Highest-rated movies (min 3 ratings for statistical relevance)
+        top_movie_recs = session.run("""
+            MATCH (m:Movie)
+            OPTIONAL MATCH ()-[r:RATED]->(m)
+            WITH m, count(r) AS ratings_count, round(avg(r.rating_value) * 100) / 100 AS avg_rating
+            WHERE ratings_count >= 3
+            OPTIONAL MATCH (m)-[:DIRECTED_BY]->(d:Director)
+            RETURN m.title AS title, m.release_year AS year,
+                   avg_rating, ratings_count, d.director_name AS director
+            ORDER BY avg_rating DESC
+            LIMIT 10
+        """).data()
+        highest_rated_movies = [
+            {
+                "title": r["title"],
+                "year": r["year"],
+                "avg_rating": float(r["avg_rating"] or 0),
+                "ratings_count": r["ratings_count"],
+                "director": r["director"] or "Unknown"
+            }
+            for r in top_movie_recs
+        ]
+
+        # 6. Relationship counts for graph health overview
+        rel_recs = session.run("""
+            CALL {
+                MATCH ()-[r:RATED]->()          RETURN 'RATED'             AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:WATCHED]->()        RETURN 'WATCHED'           AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:ACTED_IN]->()       RETURN 'ACTED_IN'          AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:DIRECTED_BY]->()    RETURN 'DIRECTED_BY'       AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:HAS_GENRE]->()      RETURN 'HAS_GENRE'         AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:ADDED_TO_WATCHLIST]->() RETURN 'WATCHLIST'     AS rel, count(r) AS n
+                UNION ALL
+                MATCH ()-[r:WROTE]->()          RETURN 'WROTE'             AS rel, count(r) AS n
+            }
+            RETURN rel, n
+        """).data()
+        rel_counts = {rec["rel"]: rec["n"] for rec in rel_recs}
 
     return {
         "node_counts": node_counts,
         "co_stars": co_stars,
         "top_genres": top_genres,
-        "top_directors": director_ratings[:8],
-        "highest_rated_movies": top_movies
+        "top_directors": top_directors,
+        "highest_rated_movies": highest_rated_movies,
+        "relationship_counts": rel_counts
     }

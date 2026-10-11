@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, Clock, Calendar, Globe, Award, ShieldCheck, Film, User, Eye, Bookmark, MessageSquare } from 'lucide-react';
+import {
+  Star, Clock, Calendar, Globe, Award, ShieldCheck, Film, User,
+  Eye, Bookmark, MessageSquare, ChevronLeft, Play, Database, Network,
+} from 'lucide-react';
 import { fetchJson } from '../api/client';
 import { PosterCard } from '../components/PosterCard';
 import { RatingModal } from '../components/RatingModal';
 
-interface MovieDetailsProps {
-  currentUser: string;
-}
+interface MovieDetailsProps { currentUser: string; }
+
+const GENRE_COLORS: Record<string, string> = {
+  'Sci-Fi': '#60c3ff', 'Action': '#ff6b6b', 'Drama': '#c084fc',
+  'Thriller': '#f97316', 'Romance': '#fb7185', 'Crime': '#fbbf24',
+  'Comedy': '#4ade80', 'Fantasy': '#818cf8', 'Animation': '#34d399',
+  'Adventure': '#38bdf8', 'Horror': '#ef4444', 'Mystery': '#a78bfa',
+};
 
 export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
 
   const loadDetails = async () => {
     if (!id) return;
@@ -29,9 +37,12 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
     }
   };
 
-  useEffect(() => {
-    loadDetails();
-  }, [id]);
+  useEffect(() => { loadDetails(); }, [id]);
+
+  const showFeedback = (msg: string, ok: boolean) => {
+    setFeedback({ msg, ok });
+    setTimeout(() => setFeedback(null), 2500);
+  };
 
   const handleWatch = async () => {
     if (!id) return;
@@ -40,11 +51,8 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
         method: 'POST',
         body: JSON.stringify({ user_id: currentUser, movie_id: id, completion_percentage: 100 }),
       });
-      setFeedback('Marked as watched in Neo4j!');
-      setTimeout(() => setFeedback(null), 2500);
-    } catch (err: any) {
-      setFeedback(`Error: ${err.message}`);
-    }
+      showFeedback('WATCHED relationship created in Neo4j ✓', true);
+    } catch (err: any) { showFeedback(err.message, false); }
   };
 
   const handleWatchlist = async () => {
@@ -54,231 +62,295 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
         method: 'POST',
         body: JSON.stringify({ user_id: currentUser, movie_id: id }),
       });
-      setFeedback('Added to watchlist in Neo4j!');
-      setTimeout(() => setFeedback(null), 2500);
-    } catch (err: any) {
-      setFeedback(`Error: ${err.message}`);
-    }
+      showFeedback('ADDED_TO_WATCHLIST relationship created in Neo4j ✓', true);
+    } catch (err: any) { showFeedback(err.message, false); }
   };
 
   if (loading) {
-    return <div className="text-center py-20 font-mono text-slate-400">Loading film metadata...</div>;
+    return (
+      <div className="py-20 flex flex-col items-center gap-4">
+        <div className="w-10 h-10 rounded-full border-2 border-[#e50914] border-t-transparent animate-spin" />
+        <p className="text-[#5a5a6e] font-mono text-sm">Loading film metadata from Neo4j…</p>
+      </div>
+    );
   }
 
   if (!movie) {
-    return <div className="text-center py-20 text-slate-400">Movie not found.</div>;
+    return (
+      <div className="py-20 text-center space-y-3">
+        <Film className="w-12 h-12 mx-auto text-[#5a5a6e]" />
+        <p className="text-[#a3a3b3]">Movie not found.</p>
+        <Link to="/" className="text-[#e50914] hover:underline text-sm">← Back to Discover</Link>
+      </div>
+    );
   }
 
-  return (
-    <div className="space-y-12 pb-16">
-      {/* Backdrop & Header Banner */}
-      <section className="relative rounded-3xl glass-panel p-8 sm:p-12 border border-cine-border overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-rose-600/15 rounded-full blur-3xl pointer-events-none" />
+  const primaryGenre = movie.genres?.[0] || '';
+  const accentColor = GENRE_COLORS[primaryGenre] || '#e50914';
+  const titleInitial = movie.title.charAt(0);
 
-        <div className="relative z-10 flex flex-col md:flex-row gap-8 items-start">
-          {/* Card Initial Poster */}
-          <div className="w-full md:w-56 aspect-[2/3] rounded-2xl bg-gradient-to-tr from-slate-900 to-rose-950 border border-white/10 flex flex-col items-center justify-center p-6 text-center shadow-2xl shrink-0">
-            <span className="text-7xl font-bold font-heading text-rose-500/30 mb-2">
-              {movie.title.charAt(0)}
+  return (
+    <div className="space-y-10 pb-20 pt-4">
+
+      {/* Back */}
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-sm text-[#5a5a6e] hover:text-white transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4" /> Back to Discover
+      </Link>
+
+      {/* ── Hero Section ── */}
+      <section className="relative rounded-2xl overflow-hidden border border-white/5" style={{ background: '#111118' }}>
+        {/* Ambient BG */}
+        <div
+          className="absolute inset-0 opacity-20"
+          style={{ background: `radial-gradient(ellipse at 70% 50%, ${accentColor}40 0%, transparent 70%)` }}
+        />
+
+        <div className="relative z-10 p-6 sm:p-10 flex flex-col md:flex-row gap-8 items-start">
+          {/* Poster Art */}
+          <div
+            className="relative w-44 sm:w-52 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 shadow-2xl border border-white/8"
+            style={{ background: `radial-gradient(ellipse at 60% 40%, ${accentColor}30 0%, #0a0a0f 80%)` }}
+          >
+            <span
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black font-heading select-none"
+              style={{ fontSize: '5rem', color: accentColor, opacity: 0.8, textShadow: `0 0 60px ${accentColor}60` }}
+            >
+              {titleInitial}
             </span>
-            <span className="font-heading font-bold text-lg text-white line-clamp-2">
-              {movie.title}
-            </span>
-            <span className="text-xs font-mono text-slate-400 mt-1">{movie.release_year}</span>
+            {/* Rating badge */}
+            {movie.avg_rating > 0 && (
+              <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm">
+                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span className="text-xs font-mono font-bold text-amber-300">{movie.avg_rating}</span>
+              </div>
+            )}
           </div>
 
-          {/* Details Column */}
-          <div className="flex-1 space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
+          {/* Details */}
+          <div className="flex-1 space-y-4 min-w-0">
+            {/* Genres */}
+            <div className="flex flex-wrap gap-1.5">
               {movie.genres?.map((g: string) => (
-                <span key={g} className="px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-600/20 text-rose-300 border border-rose-500/30">
+                <span
+                  key={g}
+                  className="px-2.5 py-1 rounded-lg text-xs font-medium border"
+                  style={{
+                    color: GENRE_COLORS[g] || '#a3a3b3',
+                    borderColor: `${GENRE_COLORS[g] || '#a3a3b3'}40`,
+                    background: `${GENRE_COLORS[g] || '#a3a3b3'}10`,
+                  }}
+                >
                   {g}
                 </span>
               ))}
-              <span className="px-2 py-0.5 rounded-md text-xs font-mono bg-white/10 text-slate-300">
-                {movie.age_rating}
-              </span>
+              {movie.age_rating && (
+                <span className="px-2.5 py-1 rounded-lg text-xs font-mono border border-white/10 text-[#5a5a6e]">
+                  {movie.age_rating}
+                </span>
+              )}
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold font-heading text-white">
+            {/* Title */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading text-white leading-tight">
               {movie.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-slate-300">
+            {/* Meta row */}
+            <div className="flex flex-wrap gap-4 text-sm font-mono text-[#a3a3b3]">
               <span className="flex items-center gap-1.5">
-                <Calendar className="w-4 h-4 text-rose-400" /> {movie.release_year}
+                <Calendar className="w-4 h-4" style={{ color: accentColor }} />
+                {movie.release_year}
               </span>
               <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-400" /> {movie.duration} mins
+                <Clock className="w-4 h-4 text-amber-400" />
+                {movie.duration} min
               </span>
               <span className="flex items-center gap-1.5">
-                <Globe className="w-4 h-4 text-cyan-400" /> {movie.language}
+                <Globe className="w-4 h-4 text-[#06b6d4]" />
+                {movie.language}
               </span>
-              <span className="flex items-center gap-1.5 text-amber-400 font-bold">
-                <Star className="w-4 h-4 fill-amber-400" /> {movie.avg_rating} / 5.0 ({movie.rating_count} ratings)
-              </span>
+              {movie.rating_count > 0 && (
+                <span className="flex items-center gap-1.5 font-bold text-amber-400">
+                  <Star className="w-4 h-4 fill-amber-400" />
+                  {movie.avg_rating} / 5.0
+                  <span className="font-normal text-[#5a5a6e]">({movie.rating_count} ratings)</span>
+                </span>
+              )}
             </div>
 
-            <p className="text-sm text-slate-300 leading-relaxed max-w-2xl">
-              {movie.description}
-            </p>
+            {/* Description */}
+            <p className="text-sm text-[#a3a3b3] leading-relaxed max-w-2xl">{movie.description}</p>
 
-            {/* Action Buttons */}
-            <div className="pt-4 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setShowRatingModal(true)}
-                className="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/30 flex items-center gap-2 transition-all"
-              >
-                <Star className="w-4 h-4 fill-white" />
-                <span>Rate Film</span>
+            {/* Director */}
+            {movie.director?.director_name && (
+              <p className="text-sm text-white">
+                <span className="text-[#5a5a6e]">Directed by </span>
+                <span className="font-semibold">{movie.director.director_name}</span>
+                <span className="text-[#5a5a6e]"> · {movie.director.nationality}</span>
+              </p>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <button onClick={() => setShowRatingModal(true)} className="btn-primary">
+                <Star className="w-4 h-4" /> Rate Film
               </button>
-
-              <button
-                onClick={handleWatch}
-                className="px-4 py-2.5 rounded-xl text-xs font-mono font-medium bg-cine-card border border-cine-border hover:bg-cine-hover text-slate-200 flex items-center gap-2 transition-colors"
-              >
-                <Eye className="w-4 h-4 text-emerald-400" />
-                <span>Mark Watched</span>
+              <button onClick={handleWatch} className="btn-secondary">
+                <Eye className="w-4 h-4" /> Mark Watched
               </button>
-
-              <button
-                onClick={handleWatchlist}
-                className="px-4 py-2.5 rounded-xl text-xs font-mono font-medium bg-cine-card border border-cine-border hover:bg-cine-hover text-slate-200 flex items-center gap-2 transition-colors"
-              >
-                <Bookmark className="w-4 h-4 text-rose-400" />
-                <span>Add to Watchlist</span>
+              <button onClick={handleWatchlist} className="btn-secondary">
+                <Bookmark className="w-4 h-4" /> + Watchlist
               </button>
             </div>
 
+            {/* Feedback */}
             {feedback && (
-              <p className="text-xs font-mono text-emerald-400 animate-in fade-in">{feedback}</p>
+              <div className={`text-xs font-mono px-3 py-1.5 rounded-lg border ${
+                feedback.ok
+                  ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'
+                  : 'bg-red-950/40 border-red-500/30 text-red-300'
+              }`}>
+                {feedback.msg}
+              </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Cast, Director, Studio, Awards Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Director */}
-        <div className="glass-panel p-5 rounded-2xl border border-cine-border space-y-2">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Directed By</span>
-          <h3 className="font-heading font-bold text-base text-white">{movie.director?.director_name}</h3>
-          <p className="text-xs text-slate-400">{movie.director?.nationality} • Born {movie.director?.director_dob}</p>
-        </div>
-
+      {/* ── Metadata Grid ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Cast */}
-        <div className="glass-panel p-5 rounded-2xl border border-cine-border space-y-2">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Key Cast</span>
-          <div className="space-y-1">
+        <div className="rounded-xl border border-white/5 p-4 space-y-3" style={{ background: '#16161f' }}>
+          <p className="section-label flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Key Cast</p>
+          <div className="space-y-1.5">
             {movie.actors?.map((a: any) => (
-              <div key={a.actor_id} className="text-xs text-slate-200 font-medium">
-                {a.actor_name} <span className="text-slate-500 font-normal">({a.actor_nationality})</span>
+              <div key={a.actor_id} className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center text-[9px] text-white font-bold flex-shrink-0">
+                  {a.actor_name?.[0]}
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-white">{a.actor_name}</p>
+                  <p className="text-[10px] text-[#5a5a6e]">{a.actor_nationality}</p>
+                </div>
               </div>
             ))}
+            {!movie.actors?.length && <p className="text-xs text-[#5a5a6e]">No cast data</p>}
           </div>
         </div>
 
         {/* Studios */}
-        <div className="glass-panel p-5 rounded-2xl border border-cine-border space-y-2">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block">Production Studios</span>
-          <div className="space-y-1">
+        <div className="rounded-xl border border-white/5 p-4 space-y-3" style={{ background: '#16161f' }}>
+          <p className="section-label flex items-center gap-1.5"><Film className="w-3.5 h-3.5" /> Studios</p>
+          <div className="space-y-1.5">
             {movie.studios?.map((s: any) => (
-              <div key={s.studio_id} className="text-xs text-slate-200 font-medium">
-                {s.studio_name} <span className="text-slate-500 font-normal">({s.country})</span>
+              <div key={s.studio_id}>
+                <p className="text-xs font-medium text-white">{s.studio_name}</p>
+                <p className="text-[10px] text-[#5a5a6e]">{s.country}</p>
+              </div>
+            ))}
+            {!movie.studios?.length && <p className="text-xs text-[#5a5a6e]">No studio data</p>}
+          </div>
+        </div>
+
+        {/* Awards */}
+        <div className="rounded-xl border border-white/5 p-4 space-y-3" style={{ background: '#16161f' }}>
+          <p className="section-label flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-400" /> Awards</p>
+          <div className="space-y-1.5">
+            {movie.awards?.length === 0 && <p className="text-xs text-[#5a5a6e] italic">No recorded awards</p>}
+            {movie.awards?.map((aw: any, idx: number) => (
+              <div key={idx}>
+                <p className="text-xs font-medium text-amber-300">{aw.award_name}</p>
+                <p className="text-[10px] text-[#5a5a6e]">{aw.year} · <span className={aw.result === 'Won' ? 'text-emerald-400' : 'text-[#5a5a6e]'}>{aw.result}</span></p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Awards */}
-        <div className="glass-panel p-5 rounded-2xl border border-cine-border space-y-2">
-          <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider block flex items-center gap-1">
-            <Award className="w-3.5 h-3.5 text-amber-400" /> Awards & Honors
-          </span>
-          <div className="space-y-1.5">
-            {movie.awards?.length === 0 ? (
-              <span className="text-xs text-slate-500 italic">No recorded awards</span>
-            ) : (
-              movie.awards?.map((aw: any, idx: number) => (
-                <div key={idx} className="text-xs text-amber-300/90 font-medium leading-tight">
-                  {aw.award_name} ({aw.year}) • <span className="text-emerald-400">{aw.result}</span>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Reviews & Rating Distribution */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-cine-border space-y-4">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-rose-400" />
-            <h3 className="font-heading font-bold text-base text-white">Community Reviews</h3>
-          </div>
-
-          <div className="space-y-3">
-            {movie.reviews?.length === 0 ? (
-              <p className="text-xs text-slate-500">No written reviews yet for this movie.</p>
-            ) : (
-              movie.reviews?.map((r: any, rIdx: number) => (
-                <div key={rIdx} className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-rose-300">@{r.username}</span>
-                    <span className="font-mono text-slate-500">{r.review_date}</span>
-                  </div>
-                  <p className="text-xs text-slate-300 leading-relaxed italic">
-                    "{r.review_text}"
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Rating Breakdown */}
-        <div className="glass-panel p-6 rounded-2xl border border-cine-border space-y-3">
-          <span className="text-xs font-mono text-slate-400 uppercase tracking-wider block">
-            Rating Distribution (1-5★)
-          </span>
-          <div className="space-y-2 pt-2">
-            {['5', '4', '3', '2', '1'].map((star) => {
+        {/* Rating Distribution */}
+        <div className="rounded-xl border border-white/5 p-4 space-y-3" style={{ background: '#16161f' }}>
+          <p className="section-label flex items-center gap-1.5"><Star className="w-3.5 h-3.5 text-amber-400" /> Ratings</p>
+          <div className="space-y-2 pt-1">
+            {['5', '4', '3', '2', '1'].map(star => {
               const count = movie.rating_distribution?.[star] || 0;
               const pct = movie.rating_count ? Math.round((count / movie.rating_count) * 100) : 0;
               return (
-                <div key={star} className="flex items-center gap-3 text-xs font-mono">
-                  <span className="w-6 text-slate-400">{star}★</span>
-                  <div className="flex-1 h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-amber-400 rounded-full" style={{ width: `${pct}%` }} />
+                <div key={star} className="flex items-center gap-2 text-xs">
+                  <span className="w-5 text-[#5a5a6e] font-mono">{star}★</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                    <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="w-8 text-right text-slate-400">{count}</span>
+                  <span className="w-5 text-right text-[#5a5a6e] font-mono">{count}</span>
                 </div>
               );
             })}
           </div>
         </div>
+      </div>
+
+      {/* ── Reviews ── */}
+      <section className="rounded-xl border border-white/5 p-5 space-y-4" style={{ background: '#16161f' }}>
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-[#e50914]" />
+          <h2 className="font-heading font-bold text-white">Community Reviews</h2>
+          <span className="badge badge-red ml-auto">WROTE · ABOUT traversal</span>
+        </div>
+        {movie.reviews?.length === 0 ? (
+          <p className="text-xs text-[#5a5a6e] italic">No written reviews yet for this film.</p>
+        ) : (
+          <div className="space-y-3">
+            {movie.reviews?.map((r: any, rIdx: number) => (
+              <div key={rIdx} className="p-4 rounded-xl bg-white/3 border border-white/4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-sm font-bold" style={{ color: accentColor }}>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-rose-600 to-amber-500 flex items-center justify-center text-[9px] text-white font-bold">
+                      {r.username?.[0]?.toUpperCase()}
+                    </div>
+                    @{r.username}
+                  </span>
+                  <span className="text-xs font-mono text-[#5a5a6e]">{r.review_date}</span>
+                </div>
+                <p className="text-sm text-[#a3a3b3] leading-relaxed italic">"{r.review_text}"</p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Similar Movies */}
+      {/* ── Similar Movies ── */}
       {movie.similar_movies?.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold font-heading text-white">
-            Similar Films in the Graph
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="flex items-center gap-2">
+            <Network className="w-4 h-4 text-[#06b6d4]" />
+            <h2 className="text-xl font-bold font-heading text-white">Similar Films in the Graph</h2>
+          </div>
+          <div className="scroll-row pb-2">
             {movie.similar_movies.map((sim: any) => (
               <Link
                 key={sim.movie_id}
                 to={`/movies/${sim.movie_id}`}
-                className="p-3 rounded-xl glass-panel glass-panel-hover border border-cine-border text-center space-y-1 block"
+                className="flex-shrink-0 w-36 group"
               >
-                <div className="w-full aspect-[2/3] rounded-lg bg-gradient-to-tr from-slate-900 to-rose-950/60 flex items-center justify-center font-heading font-bold text-xl text-white/30">
-                  {sim.title.charAt(0)}
+                <div className="rounded-xl overflow-hidden border border-white/5 hover:border-white/15 transition-all hover:-translate-y-1">
+                  <div
+                    className="w-full aspect-[2/3] flex items-center justify-center font-black font-heading text-4xl"
+                    style={{
+                      background: `radial-gradient(ellipse at 50% 40%, ${accentColor}30 0%, #0a0a0f 80%)`,
+                      color: accentColor,
+                      opacity: 0.9,
+                    }}
+                  >
+                    {sim.title.charAt(0)}
+                  </div>
+                  <div className="p-2 bg-[#16161f]">
+                    <p className="text-xs font-bold text-white line-clamp-1">{sim.title}</p>
+                    <p className="text-[10px] font-mono mt-0.5" style={{ color: accentColor }}>
+                      Sim {Math.round(sim.similarity_score * 100)}%
+                    </p>
+                  </div>
                 </div>
-                <h4 className="font-heading font-bold text-xs text-white truncate">{sim.title}</h4>
-                <span className="text-[10px] font-mono text-rose-400 block">
-                  Sim {Math.round(sim.similarity_score * 100)}%
-                </span>
               </Link>
             ))}
           </div>
