@@ -1,4 +1,5 @@
-const envUrl = (import.meta as any).env?.VITE_API_URL;
+const isProd = (import.meta as any).env?.PROD;
+const envUrl = (import.meta as any).env?.VITE_API_URL || (isProd ? 'https://cinegraph-9iab.onrender.com' : '');
 export const API_BASE = envUrl ? `${envUrl.replace(/\/$/, '')}/api` : '/api';
 
 export async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
