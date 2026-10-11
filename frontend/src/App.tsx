@@ -28,6 +28,7 @@ export const App: React.FC = () => {
     return (
       <ProfileSelect
         onSelect={(userId) => setCurrentUser(userId)}
+        onReplayIntro={() => setShowIntro(true)}
       />
     );
   }

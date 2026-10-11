@@ -88,14 +88,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
           </Link>
 
           {/* ── Desktop Nav ── */}
-          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+          <nav className="hidden xl:flex items-center gap-0.5 flex-1 justify-center">
             {NAV_LINKS.map(link => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`relative px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
                     active
                       ? 'text-white'
                       : 'text-[#a3a3b3] hover:text-white'
@@ -120,11 +120,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
           </nav>
 
           {/* ── Right Controls ── */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2.5 flex-shrink-0">
             {/* Neo4j Status */}
             <Link
               to="/admin"
-              className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-mono border transition-all ${
+              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-mono border transition-all flex-shrink-0 ${
                 dbStatus?.connected
                   ? 'bg-emerald-950/50 border-emerald-500/30 text-emerald-400 hover:border-emerald-400/60'
                   : 'bg-red-950/50 border-red-500/30 text-red-400'
@@ -135,22 +135,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
             </Link>
 
             {/* User Selector */}
-            <div className="relative" ref={dropRef}>
+            <div className="relative flex-shrink-0" ref={dropRef}>
               <button
                 onClick={() => setUserDropdown(v => !v)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/8 hover:border-white/15 transition-all text-sm"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/8 hover:bg-white/8 hover:border-white/15 transition-all text-sm flex-shrink-0"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#e50914] to-amber-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                   {currentUserObj?.username?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <span className="hidden sm:block text-white font-medium max-w-[90px] truncate">
+                <span className="text-white font-medium whitespace-nowrap">
                   {currentUserObj?.username || currentUser}
                 </span>
                 <ChevronDown className={`w-3.5 h-3.5 text-[#a3a3b3] transition-transform ${userDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {userDropdown && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-[#111118] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                <div className="absolute right-0 top-full mt-2 w-64 bg-[#111118] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
                   <div className="px-3 py-2 border-b border-white/5">
                     <p className="text-xs text-[#5a5a6e] font-mono uppercase tracking-wider">Switch Profile</p>
                   </div>
