@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Film, Network, Sparkles, Scale, Activity, BarChart3,
-  Database, User, ChevronDown, Search, Menu, X, Zap,
+  Database, User, Users, ChevronDown, Search, Menu, X, Zap,
 } from 'lucide-react';
 import { fetchJson } from '../api/client';
 
 interface NavbarProps {
   currentUser: string;
   onUserChange: (userId: string) => void;
+  onSwitchProfile?: () => void;
 }
 
 const NAV_LINKS = [
@@ -22,7 +23,7 @@ const NAV_LINKS = [
   { name: 'Admin',           path: '/admin',        icon: Database },
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwitchProfile }) => {
   const location = useLocation();
   const [users, setUsers] = useState<any[]>([]);
   const [dbStatus, setDbStatus] = useState<any>(null);
@@ -180,7 +181,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange }) => 
                       </button>
                     ))}
                   </div>
-                  <div className="border-t border-white/5 p-1">
+                  <div className="border-t border-white/5 p-1 space-y-0.5">
                     <Link
                       to="/profile"
                       onClick={() => setUserDropdown(false)}
@@ -189,6 +190,18 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange }) => 
                       <User className="w-4 h-4" />
                       View Profile
                     </Link>
+                    {onSwitchProfile && (
+                      <button
+                        onClick={() => {
+                          setUserDropdown(false);
+                          onSwitchProfile();
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#a3a3b3] hover:text-[#e50914] hover:bg-white/5 transition-colors text-left"
+                      >
+                        <Users className="w-4 h-4" />
+                        Who's watching?
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

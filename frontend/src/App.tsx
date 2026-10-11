@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
+import { ProfileSelect } from './pages/ProfileSelect';
 import { Home } from './pages/Home';
 import { Recommendations } from './pages/Recommendations';
 import { LiveLab } from './pages/LiveLab';
@@ -13,25 +14,39 @@ import { AdminExplorer } from './pages/AdminExplorer';
 import { Profile } from './pages/Profile';
 
 export const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<string>('u01');
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
 
+  // ── Netflix-style profile gate ──────────────────────────
+  if (!currentUser) {
+    return (
+      <ProfileSelect
+        onSelect={(userId) => setCurrentUser(userId)}
+      />
+    );
+  }
+
+  // ── Main app shell ──────────────────────────────────────
   return (
     <Router>
       <div className="min-h-screen" style={{ background: '#0a0a0f', color: '#f5f5f1' }}>
-        <Navbar currentUser={currentUser} onUserChange={setCurrentUser} />
+        <Navbar
+          currentUser={currentUser}
+          onUserChange={setCurrentUser}
+          onSwitchProfile={() => setCurrentUser(null)}
+        />
 
         <main className="max-w-[1400px] w-full mx-auto px-4 sm:px-6">
           <Routes>
-            <Route path="/"              element={<Home currentUser={currentUser} />} />
+            <Route path="/"                element={<Home currentUser={currentUser} />} />
             <Route path="/recommendations" element={<Recommendations currentUser={currentUser} />} />
-            <Route path="/lab"           element={<LiveLab />} />
-            <Route path="/compare"       element={<CompareUsers />} />
-            <Route path="/ml-eval"       element={<MLEvaluation />} />
-            <Route path="/explore"       element={<GraphExplorer />} />
-            <Route path="/movies/:id"    element={<MovieDetails currentUser={currentUser} />} />
-            <Route path="/analytics"     element={<Analytics />} />
-            <Route path="/admin"         element={<AdminExplorer />} />
-            <Route path="/profile"       element={<Profile currentUser={currentUser} />} />
+            <Route path="/lab"             element={<LiveLab />} />
+            <Route path="/compare"         element={<CompareUsers />} />
+            <Route path="/ml-eval"         element={<MLEvaluation />} />
+            <Route path="/explore"         element={<GraphExplorer />} />
+            <Route path="/movies/:id"      element={<MovieDetails currentUser={currentUser} />} />
+            <Route path="/analytics"       element={<Analytics />} />
+            <Route path="/admin"           element={<AdminExplorer />} />
+            <Route path="/profile"         element={<Profile currentUser={currentUser} />} />
           </Routes>
         </main>
 

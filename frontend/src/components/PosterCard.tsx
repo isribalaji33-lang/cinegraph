@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Clock, Play, Bookmark, Eye, Info, Plus } from 'lucide-react';
+import { getPosterUrl } from '../data/moviePosters';
 
 interface MovieCardProps {
   movie: {
@@ -31,7 +32,7 @@ const PALETTES = [
   { from: '#1a1000', via: '#5c3d00', to: '#0a0800' },
   { from: '#150020', via: '#4a0080', to: '#080010' },
   { from: '#001a1a', via: '#005555', to: '#000d0d' },
-  { from: '#1a0022', via: '#6600aa', to: '#0a0012' },
+  { daylight: false, from: '#1a0022', via: '#6600aa', to: '#0a0012' },
   { from: '#1a0808', via: '#7a1a1a', to: '#0a0404' },
 ];
 
@@ -109,6 +110,8 @@ export const PosterCard: React.FC<MovieCardProps> = ({
   variant = 'default',
 }) => {
   const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const posterUrl = getPosterUrl(movie.movie_id);
   const hash = hashStr(movie.title);
   const palette = PALETTES[hash % PALETTES.length];
   const genre1 = movie.genres?.[0] || '';
@@ -133,8 +136,22 @@ export const PosterCard: React.FC<MovieCardProps> = ({
       onMouseLeave={() => setHovered(false)}
     >
       {/* ── Poster Art Area ── */}
-      <Link to={`/movies/${movie.movie_id}`} className={`block relative ${isHeroRow ? 'h-full' : 'aspect-[2/3]'}`}>
-        <PosterArt title={movie.title} genres={movie.genres} palette={palette} />
+      <Link to={`/movies/${movie.movie_id}`} className={`block relative ${isHeroRow ? 'h-full' : 'aspect-[2/3]'} overflow-hidden bg-[#0d0d14]`}>
+        {posterUrl && !imgError ? (
+          <>
+            <img
+              src={posterUrl}
+              alt={movie.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+              onError={() => setImgError(true)}
+            />
+            {/* Ambient vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+          </>
+        ) : (
+          <PosterArt title={movie.title} genres={movie.genres} palette={palette} />
+        )}
 
         {/* Top Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">

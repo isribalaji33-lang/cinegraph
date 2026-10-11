@@ -7,6 +7,7 @@ import {
 import { fetchJson } from '../api/client';
 import { PosterCard } from '../components/PosterCard';
 import { RatingModal } from '../components/RatingModal';
+import { getPosterUrl } from '../data/moviePosters';
 
 interface MovieDetailsProps { currentUser: string; }
 
@@ -21,6 +22,7 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
   const { id } = useParams<{ id: string }>();
   const [movie, setMovie] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null);
 
@@ -101,33 +103,57 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
       </Link>
 
       {/* ── Hero Section ── */}
-      <section className="relative rounded-2xl overflow-hidden border border-white/5" style={{ background: '#111118' }}>
-        {/* Ambient BG */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{ background: `radial-gradient(ellipse at 70% 50%, ${accentColor}40 0%, transparent 70%)` }}
-        />
-
-        <div className="relative z-10 p-6 sm:p-10 flex flex-col md:flex-row gap-8 items-start">
-          {/* Poster Art */}
-          <div
-            className="relative w-44 sm:w-52 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 shadow-2xl border border-white/8"
-            style={{ background: `radial-gradient(ellipse at 60% 40%, ${accentColor}30 0%, #0a0a0f 80%)` }}
-          >
-            <span
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-black font-heading select-none"
-              style={{ fontSize: '5rem', color: accentColor, opacity: 0.8, textShadow: `0 0 60px ${accentColor}60` }}
-            >
-              {titleInitial}
-            </span>
-            {/* Rating badge */}
-            {movie.avg_rating > 0 && (
-              <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm">
-                <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                <span className="text-xs font-mono font-bold text-amber-300">{movie.avg_rating}</span>
-              </div>
+      {(() => {
+        const posterUrl = getPosterUrl(movie.movie_id);
+        return (
+          <section className="relative rounded-2xl overflow-hidden border border-white/5" style={{ background: '#111118' }}>
+            {/* Ambient Backdrop */}
+            {posterUrl && !imgError ? (
+              <div
+                className="absolute inset-0 opacity-20 bg-cover bg-center filter blur-3xl scale-125 pointer-events-none"
+                style={{ backgroundImage: `url(${posterUrl})` }}
+              />
+            ) : (
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{ background: `radial-gradient(ellipse at 70% 50%, ${accentColor}40 0%, transparent 70%)` }}
+              />
             )}
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#111118] via-transparent to-transparent" />
+
+            <div className="relative z-10 p-6 sm:p-10 flex flex-col md:flex-row gap-8 items-start">
+              {/* Poster Art */}
+              <div
+                className="relative w-44 sm:w-52 aspect-[2/3] rounded-xl overflow-hidden flex-shrink-0 shadow-2xl border border-white/10 bg-[#0a0a0f]"
+              >
+                {posterUrl && !imgError ? (
+                  <img
+                    src={posterUrl}
+                    alt={movie.title}
+                    className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
+                  />
+                ) : (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ background: `radial-gradient(ellipse at 60% 40%, ${accentColor}30 0%, #0a0a0f 80%)` }}
+                  >
+                    <span
+                      className="font-black font-heading select-none"
+                      style={{ fontSize: '5rem', color: accentColor, opacity: 0.8, textShadow: `0 0 60px ${accentColor}60` }}
+                    >
+                      {titleInitial}
+                    </span>
+                  </div>
+                )}
+                {/* Rating badge */}
+                {movie.avg_rating > 0 && (
+                  <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                    <span className="text-xs font-mono font-bold text-amber-300">{movie.avg_rating}</span>
+                  </div>
+                )}
+              </div>
 
           {/* Details */}
           <div className="flex-1 space-y-4 min-w-0">
@@ -219,6 +245,8 @@ export const MovieDetails: React.FC<MovieDetailsProps> = ({ currentUser }) => {
           </div>
         </div>
       </section>
+        );
+      })()}
 
       {/* ── Metadata Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

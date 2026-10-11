@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Sliders, Info, ShieldCheck, Star, GitBranch, ArrowRight, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Sparkles, Sliders, Info, ShieldCheck, Star, GitBranch, ArrowRight, RefreshCw, Film } from 'lucide-react';
 import { fetchJson } from '../api/client';
 import { RatingModal } from '../components/RatingModal';
+import { getPosterUrl } from '../data/moviePosters';
 
 interface RecommendationsProps {
   currentUser: string;
@@ -180,18 +182,38 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
             >
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div className="flex items-start gap-4">
-                  {/* Rank Badge */}
-                  <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-lg text-rose-400 shrink-0">
-                    #{idx + 1}
-                  </span>
+                  {/* Poster Thumbnail + Rank Badge */}
+                  <Link
+                    to={`/movies/${item.movie_id}`}
+                    className="relative w-16 sm:w-20 aspect-[2/3] rounded-xl overflow-hidden bg-[#16161f] border border-white/10 shrink-0 shadow-lg group block"
+                  >
+                    {getPosterUrl(item.movie_id) ? (
+                      <img
+                        src={getPosterUrl(item.movie_id)!}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-rose-950 to-black font-black text-rose-400">
+                        {item.title.charAt(0)}
+                      </div>
+                    )}
+                    {/* Rank Badge Overlay */}
+                    <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-sm font-mono font-bold text-[10px] text-rose-400 border border-white/10">
+                      #{idx + 1}
+                    </span>
+                  </Link>
 
                   <div>
-                    <h3 className="text-xl font-bold font-heading text-white flex items-center gap-2">
-                      {item.title}
-                      <span className="text-xs font-mono text-slate-400 font-normal">
-                        ({item.release_year})
-                      </span>
-                    </h3>
+                    <Link to={`/movies/${item.movie_id}`} className="hover:text-[#e50914] transition-colors">
+                      <h3 className="text-xl font-bold font-heading text-white flex items-center gap-2">
+                        {item.title}
+                        <span className="text-xs font-mono text-slate-400 font-normal">
+                          ({item.release_year})
+                        </span>
+                      </h3>
+                    </Link>
                     <p className="text-xs text-slate-400 mt-1">
                       Directed by <span className="text-amber-300 font-medium">{item.director}</span> • {item.genres.join(', ')} • {item.duration} mins
                     </p>
