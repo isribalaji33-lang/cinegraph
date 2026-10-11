@@ -76,6 +76,17 @@ app.include_router(analytics_router)
 app.include_router(admin_router)
 app.include_router(ml_eval_router)
 
+@app.get("/", tags=["Health"])
+def root_status():
+    """Root endpoint welcoming visitors and providing API documentation links."""
+    return {
+        "status": "online",
+        "service": "CineGraph API",
+        "version": "1.0.0",
+        "docs_url": "/docs",
+        "health_url": "/api/health"
+    }
+
 @app.get("/api/health", tags=["Health"])
 def health_check():
     """System health check endpoint verifying database connectivity."""
