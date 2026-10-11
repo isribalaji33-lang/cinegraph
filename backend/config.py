@@ -5,6 +5,7 @@ from typing import Optional
 class Settings(BaseSettings):
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
+    NEO4J_USERNAME: Optional[str] = None
     NEO4J_PASSWORD: str = ""
     NEO4J_DATABASE: str = "neo4j"
 
@@ -18,6 +19,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     TMDB_API_KEY: Optional[str] = None
+
+    def model_post_init(self, __context):
+        if self.NEO4J_USERNAME and (self.NEO4J_USER == "neo4j" or not self.NEO4J_USER):
+            self.NEO4J_USER = self.NEO4J_USERNAME
+        if self.NEO4J_DATABASE == "neo4j" and self.NEO4J_USER != "neo4j":
+            self.NEO4J_DATABASE = self.NEO4J_USER
 
     class Config:
         env_file = ".env"
