@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { ProfileSelect } from './pages/ProfileSelect';
-import { NetflixIntro } from './components/NetflixIntro';
 import { Home } from './pages/Home';
 import { Recommendations } from './pages/Recommendations';
 import { LiveLab } from './pages/LiveLab';
@@ -15,20 +14,13 @@ import { AdminExplorer } from './pages/AdminExplorer';
 import { Profile } from './pages/Profile';
 
 export const App: React.FC = () => {
-  const [showIntro, setShowIntro] = useState(true);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
-
-  // ── Netflix-style cinematic intro animation with "Ta-dum" sound ──
-  if (showIntro) {
-    return <NetflixIntro onFinish={() => setShowIntro(false)} />;
-  }
 
   // ── Netflix-style profile gate ──────────────────────────
   if (!currentUser) {
     return (
       <ProfileSelect
         onSelect={(userId) => setCurrentUser(userId)}
-        onReplayIntro={() => setShowIntro(true)}
       />
     );
   }

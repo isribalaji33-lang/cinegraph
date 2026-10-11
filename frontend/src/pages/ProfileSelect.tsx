@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Film, ChevronRight, Zap, Network, Volume2 } from 'lucide-react';
+import { Film, ChevronRight, Zap, Network } from 'lucide-react';
 import { fetchJson } from '../api/client';
+import { playTaDumSound } from '../utils/audio';
 
 interface ProfileSelectProps {
   onSelect: (userId: string) => void;
-  onReplayIntro?: () => void;
 }
 
 // Curated gradient palettes per user slot
@@ -33,7 +33,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
   'Spain': '🇪🇸', 'Italy': '🇮🇹', 'Mexico': '🇲🇽', 'Argentina': '🇦🇷',
 };
 
-export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect, onReplayIntro }) => {
+export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
@@ -47,7 +47,9 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect, onReplay
 
   const handleClick = (userId: string) => {
     setSelected(userId);
-    setTimeout(() => onSelect(userId), 420);
+    // Play the iconic Netflix Ta-dum sound automatically on profile selection
+    playTaDumSound();
+    setTimeout(() => onSelect(userId), 650);
   };
 
   return (
@@ -55,17 +57,6 @@ export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect, onReplay
       className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden"
       style={{ background: '#050507' }}
     >
-      {/* ── Replay Intro Button ── */}
-      {onReplayIntro && (
-        <button
-          onClick={onReplayIntro}
-          className="absolute top-6 right-6 z-20 flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/5 border border-white/10 hover:bg-white/15 hover:border-white/20 text-xs font-mono text-white/80 hover:text-white transition-all cursor-pointer shadow-lg backdrop-blur-sm"
-          title="Play the cinematic Netflix intro with sound"
-        >
-          <Volume2 className="w-3.5 h-3.5 text-[#e50914] animate-pulse" />
-          <span>Replay Ta-dum</span>
-        </button>
-      )}
       {/* ── Animated ambient orbs ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute w-[600px] h-[600px] rounded-full opacity-10 blur-3xl animate-float"
