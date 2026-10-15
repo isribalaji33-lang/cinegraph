@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Sparkles, TrendingUp, Award, Film, Search, Play,
+  Sparkles, TrendingUp, Award, Film, Search, Play, Pause,
   Info, ChevronRight, ChevronLeft, Zap, Network, Star,
   BarChart3, Activity, ArrowRight, Users,
 } from 'lucide-react';
+
 import { fetchJson } from '../api/client';
 import { PosterCard } from '../components/PosterCard';
 import { RatingModal } from '../components/RatingModal';
@@ -98,75 +99,294 @@ const MovieRow: React.FC<RowProps> = ({
   );
 };
 
-/* ─── Hero Billboard ────────────────────────────────────── */
+/* ─── Seed Showcase Movies for Immediate Hero Display ───── */
+const SEED_SHOWCASE_MOVIES = [
+  {
+    movie_id: 'm02',
+    title: 'Interstellar',
+    description: "When Earth becomes uninhabitable in the future, a farmer and ex-NASA pilot is tasked to pilot a spacecraft along with a team of researchers to find a new planet for humans.",
+    release_year: 2014,
+    duration: 169,
+    avg_rating: 4.8,
+    genres: ['Sci-Fi', 'Drama', 'Adventure'],
+    director_name: 'Christopher Nolan',
+    badge: 'Epic Sci-Fi Showcase'
+  },
+  {
+    movie_id: 'm01',
+    title: 'Inception',
+    description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
+    release_year: 2010,
+    duration: 148,
+    avg_rating: 4.7,
+    genres: ['Sci-Fi', 'Action', 'Thriller'],
+    director_name: 'Christopher Nolan',
+    badge: 'Mind-Bending Classic'
+  },
+  {
+    movie_id: 'm04',
+    title: 'Blade Runner 2049',
+    description: "Young Blade Runner K's discovery of a long-buried secret leads him to track down former Blade Runner Rick Deckard, who's been missing for thirty years.",
+    release_year: 2017,
+    duration: 164,
+    avg_rating: 4.6,
+    genres: ['Sci-Fi', 'Thriller', 'Mystery'],
+    director_name: 'Denis Villeneuve',
+    badge: 'Cyberpunk Masterpiece'
+  },
+  {
+    movie_id: 'm13',
+    title: 'Gladiator',
+    description: "A former Roman General sets out to exact vengeance against the corrupt emperor who murdered his family and sent him into slavery.",
+    release_year: 2000,
+    duration: 155,
+    avg_rating: 4.7,
+    genres: ['Action', 'Drama', 'Adventure'],
+    director_name: 'Ridley Scott',
+    badge: 'Historical Blockbuster'
+  },
+  {
+    movie_id: 'm14',
+    title: 'The Martian',
+    description: "An astronaut becomes stranded on Mars after his team assume him dead, and must rely on his ingenuity to find a way to signal to Earth that he is alive.",
+    release_year: 2015,
+    duration: 144,
+    avg_rating: 4.5,
+    genres: ['Sci-Fi', 'Adventure', 'Drama'],
+    director_name: 'Ridley Scott',
+    badge: 'Survival Triumph'
+  },
+  {
+    movie_id: 'm17',
+    title: 'Parasite',
+    description: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
+    release_year: 2019,
+    duration: 132,
+    avg_rating: 4.8,
+    genres: ['Thriller', 'Drama', 'Comedy'],
+    director_name: 'Bong Joon-ho',
+    badge: 'Palme d\'Or Winner'
+  },
+  {
+    movie_id: 'm23',
+    title: 'Mad Max: Fury Road',
+    description: "In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler in search for her homeland with the aid of a group of female prisoners and a drifter named Max.",
+    release_year: 2015,
+    duration: 120,
+    avg_rating: 4.6,
+    genres: ['Action', 'Adventure', 'Sci-Fi'],
+    director_name: 'George Miller',
+    badge: 'High-Octane Action'
+  },
+  {
+    movie_id: 'm29',
+    title: 'Avatar',
+    description: "A paraplegic Marine dispatched to the moon Pandora on a unique mission becomes torn between following his orders and protecting the world he feels is his home.",
+    release_year: 2009,
+    duration: 162,
+    avg_rating: 4.4,
+    genres: ['Sci-Fi', 'Action', 'Adventure'],
+    director_name: 'James Cameron',
+    badge: 'Visual Frontier'
+  }
+];
+
+const ROTATION_INTERVAL = 7000; // 7 seconds per slide
+
+/* ─── Hero Billboard (Cinematic Autoplay Carousel) ──────── */
 const HeroBillboard: React.FC<{
+  movies?: any[];
   featured?: any;
   searchQuery: string;
   onSearch: (q: string) => void;
-}> = ({ featured, searchQuery, onSearch }) => {
-  const title = featured?.title || 'Interstellar';
-  const desc = featured?.description || 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.';
-  const year = featured?.release_year || 2014;
-  const duration = featured?.duration || 169;
-  const rating = featured?.avg_rating || 4.8;
-  const genres = featured?.genres || ['Sci-Fi', 'Drama', 'Adventure'];
-  const backdropUrl = getBackdropUrl(featured?.movie_id || 'm02');
+}> = ({ movies, searchQuery, onSearch }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isTabHidden, setIsTabHidden] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+
+  // Synchronize curated showcase movies with live backend database metadata
+  const showcaseMovies = useMemo(() => {
+    if (!movies || movies.length === 0) return SEED_SHOWCASE_MOVIES;
+    const movieMap = new Map(movies.map(m => [m.movie_id, m]));
+    return SEED_SHOWCASE_MOVIES.map(seed => {
+      const live = movieMap.get(seed.movie_id);
+      if (!live) return seed;
+      return {
+        ...seed,
+        ...live,
+        genres: Array.isArray(live.genres) && live.genres.length > 0 ? live.genres : seed.genres,
+        avg_rating: live.avg_rating ?? seed.avg_rating,
+        release_year: live.release_year ?? seed.release_year,
+        duration: live.duration ?? seed.duration,
+        description: live.description || seed.description,
+        title: live.title || seed.title,
+        director_name: live.director_name || seed.director_name,
+        badge: seed.badge,
+      };
+    });
+  }, [movies]);
+
+  // Preload all backdrop images into browser cache immediately
+  useEffect(() => {
+    showcaseMovies.forEach(m => {
+      const url = getBackdropUrl(m.movie_id);
+      if (url) {
+        const img = new Image();
+        img.src = url;
+      }
+    });
+  }, [showcaseMovies]);
+
+  // Track tab visibility changes so rotation pauses when backgrounded
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsTabHidden(document.visibilityState === 'hidden');
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  const isPaused = isHovered || isFocused || isTabHidden || isManuallyPaused;
+
+  // Autoplay timer
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % showcaseMovies.length);
+    }, ROTATION_INTERVAL);
+    return () => clearInterval(timer);
+  }, [isPaused, showcaseMovies.length]);
+
+  const handlePrev = () => {
+    setCurrentIndex(prev => (prev - 1 + showcaseMovies.length) % showcaseMovies.length);
+  };
+
+  const handleNext = () => {
+    setCurrentIndex(prev => (prev + 1) % showcaseMovies.length);
+  };
+
+  const activeMovie = showcaseMovies[currentIndex] || showcaseMovies[0];
+  const activeRating = activeMovie?.avg_rating ? Number(activeMovie.avg_rating).toFixed(1) : '4.8';
+  const activeGenres = (activeMovie?.genres || ['Sci-Fi', 'Drama']).slice(0, 3).join(' · ');
 
   return (
-    <section className="relative -mx-4 sm:-mx-6 mb-6 overflow-hidden rounded-b-2xl border-b border-white/[0.08] shadow-2xl">
-      {/* Background Cinematic Artwork with subtle graph overlay */}
-      <div className="relative w-full h-[380px] sm:h-[420px] bg-[#08080C] overflow-hidden">
-        <img
-          src={backdropUrl}
-          alt={title}
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 transition-transform duration-1000"
-        />
+    <section
+      className="group relative -mx-4 sm:-mx-6 mb-6 overflow-hidden rounded-b-2xl border-b border-white/[0.08] shadow-2xl select-none"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      aria-roledescription="carousel"
+      aria-label="CineGraph Featured Movie Showcase"
+    >
+      {/* ── Background Layered Artwork with Ken Burns effect & Smooth Crossfade ── */}
+      <div className="relative w-full min-h-[460px] sm:min-h-[500px] lg:min-h-[520px] bg-[#08080C] overflow-hidden flex flex-col justify-end">
+        {showcaseMovies.map((movie, idx) => {
+          const isActive = idx === currentIndex;
+          const backdrop = getBackdropUrl(movie.movie_id);
+          return (
+            <div
+              key={movie.movie_id}
+              aria-hidden={!isActive}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isActive ? 'opacity-100 z-0' : 'opacity-0 z-0 pointer-events-none'
+              }`}
+            >
+              <img
+                src={backdrop}
+                alt=""
+                className={`w-full h-full object-cover object-center ${
+                  isActive ? 'animate-ken-burns' : ''
+                }`}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+              />
+            </div>
+          );
+        })}
 
-        {/* Cinematic gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#08080C] via-[#08080C]/85 to-transparent w-full sm:w-3/4 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#08080C] via-[#08080C]/40 to-transparent z-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(241,11,32,0.12),transparent_60%)] z-10 pointer-events-none" />
+        {/* Cinematic gradient overlays for high text contrast and seamless blending */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#08080C] via-[#08080C]/90 to-transparent w-full md:w-3/4 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#08080C] via-[#08080C]/50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(241,11,32,0.14),transparent_65%)] z-10 pointer-events-none" />
 
-        {/* Content Area */}
-        <div className="relative z-20 max-w-[1440px] h-full mx-auto px-4 sm:px-6 flex flex-col justify-end pb-8 pt-4">
+        {/* ── Left / Right Navigation Arrows (Visible on hover or keyboard focus) ── */}
+        <button
+          onClick={handlePrev}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          aria-label={`Previous movie: ${showcaseMovies[(currentIndex - 1 + showcaseMovies.length) % showcaseMovies.length].title}`}
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-[#F10B20] text-white/80 hover:text-white border border-white/15 hover:border-[#F10B20] shadow-2xl backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+        >
+          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
+        <button
+          onClick={handleNext}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          aria-label={`Next movie: ${showcaseMovies[(currentIndex + 1) % showcaseMovies.length].title}`}
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-[#F10B20] text-white/80 hover:text-white border border-white/15 hover:border-[#F10B20] shadow-2xl backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+        >
+          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
+        {/* ── Hero Foreground Content ── */}
+        <div className="relative z-20 max-w-[1440px] w-full mx-auto px-4 sm:px-8 pb-8 pt-6 flex flex-col justify-end">
           <div className="max-w-2xl space-y-3.5">
-            {/* Tag Pills */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#F10B20]/20 text-[#F10B20] border border-[#F10B20]/30 shadow-sm">
-                Featured Blockbuster
-              </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-black/60 text-amber-300 border border-white/10">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                {Number(rating).toFixed(1)} Rating
-              </span>
-              <span className="text-xs font-mono text-zinc-400">
-                {year} · {duration} min · {genres.slice(0, 2).join(', ')}
-              </span>
+            {/* Animated synchronized text block */}
+            <div key={activeMovie.movie_id} className="space-y-3 animate-hero-text">
+              {/* Badge & Metadata Pills */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#F10B20]/20 text-[#F10B20] border border-[#F10B20]/40 shadow-sm backdrop-blur-md">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#F10B20] animate-pulse" />
+                  {activeMovie.badge || 'Featured Blockbuster'}
+                </span>
+
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-black/70 text-amber-300 border border-amber-500/20 shadow-sm">
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  {activeRating} Rating
+                </span>
+
+                <span className="text-xs font-mono text-zinc-300 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/10">
+                  {activeMovie.release_year} · {activeMovie.duration} min · {activeGenres}
+                </span>
+
+                {activeMovie.director_name && (
+                  <span className="text-xs font-mono text-zinc-400 hidden sm:inline">
+                    Dir. {activeMovie.director_name}
+                  </span>
+                )}
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading tracking-tight text-white uppercase drop-shadow-xl leading-none">
+                {activeMovie.title}
+              </h1>
+
+              {/* Synopsis */}
+              <p className="text-xs sm:text-sm text-[#E2E8F0] leading-relaxed line-clamp-2 sm:line-clamp-3 max-w-xl drop-shadow">
+                {activeMovie.description}
+              </p>
             </div>
 
-            {/* Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading tracking-tight text-white uppercase drop-shadow-md">
-              {title}
-            </h1>
-
-            {/* Subtitle / Synopsis with high contrast */}
-            <p className="text-xs sm:text-sm text-[#E2E8F0] leading-relaxed line-clamp-2 max-w-xl">
-              {desc}
-            </p>
-
-            {/* Search Input Field */}
+            {/* Search Input Field (Persistent state, does not unmount during movie change) */}
             <div className="relative max-w-lg pt-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => onSearch(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 placeholder="Search movies, directors, genres in Neo4j..."
-                className="w-full h-11 pl-10 pr-14 rounded-xl bg-black/70 border border-white/15 text-white placeholder-[#64748B] text-xs sm:text-sm focus:outline-none focus:border-[#F10B20] focus:ring-1 focus:ring-[#F10B20] backdrop-blur-md transition-all shadow-inner"
+                aria-label="Search movies, directors, genres"
+                className="w-full h-11 pl-10 pr-14 rounded-xl bg-black/75 border border-white/15 text-white placeholder-[#64748B] text-xs sm:text-sm focus:outline-none focus:border-[#F10B20] focus:ring-1 focus:ring-[#F10B20] backdrop-blur-md transition-all shadow-inner"
               />
               {searchQuery && (
                 <button
                   onClick={() => onSearch('')}
+                  aria-label="Clear search input"
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 hover:text-white"
                 >
                   Clear
@@ -180,19 +400,81 @@ const HeroBillboard: React.FC<{
                 <Sparkles className="w-4 h-4" />
                 <span>Get Recommendations</span>
               </Link>
+
               <Link to="/lab" className="btn-secondary text-xs sm:text-sm">
                 <Network className="w-4 h-4 text-cyan-400" />
                 <span>Neo4j Live Lab</span>
               </Link>
-              {featured?.movie_id && (
-                <Link
-                  to={`/movies/${featured.movie_id}`}
-                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-1.5"
-                >
-                  <Info className="w-4 h-4" />
-                  <span>View Details</span>
-                </Link>
-              )}
+
+              <Link
+                to={`/movies/${activeMovie.movie_id}`}
+                className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <Info className="w-4 h-4 text-red-400" />
+                <span>View Details</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* ── Carousel Bottom Controls (Indicators & Autoplay Status) ── */}
+          <div className="mt-6 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+            {/* Pagination Indicators */}
+            <div className="flex items-center gap-2" role="tablist" aria-label="Movie carousel pagination">
+              {showcaseMovies.map((movie, idx) => {
+                const isActive = idx === currentIndex;
+                return (
+                  <button
+                    key={movie.movie_id}
+                    onClick={() => setCurrentIndex(idx)}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-label={`Show ${movie.title} (${idx + 1} of ${showcaseMovies.length})`}
+                    className={`relative rounded-full transition-all duration-300 overflow-hidden cursor-pointer ${
+                      isActive
+                        ? 'w-10 sm:w-14 h-2 bg-white/20 shadow-sm'
+                        : 'w-2 sm:w-2.5 h-2 bg-white/30 hover:bg-white/60'
+                    }`}
+                  >
+                    {isActive && (
+                      <span
+                        key={`bar-${currentIndex}-${isPaused ? 'paused' : 'running'}`}
+                        className={`absolute inset-0 bg-[#F10B20] rounded-full ${
+                          isPaused ? 'w-full' : 'animate-hero-progress'
+                        }`}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Autoplay Play/Pause Toggle & Movie Counter */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsManuallyPaused(prev => !prev)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                aria-label={isManuallyPaused ? "Resume autoplay" : "Pause autoplay"}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-mono transition-colors cursor-pointer"
+              >
+                {isManuallyPaused ? (
+                  <>
+                    <Play className="w-3 h-3 fill-emerald-400 text-emerald-400" />
+                    <span>Play</span>
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-3 h-3 text-amber-400" />
+                    <span>{isPaused ? 'Paused' : 'Auto'}</span>
+                  </>
+                )}
+              </button>
+
+              <span className="font-mono text-[11px] text-zinc-400">
+                <span className="text-white font-bold">0{currentIndex + 1}</span> / 0{showcaseMovies.length}
+              </span>
             </div>
           </div>
         </div>
@@ -200,6 +482,7 @@ const HeroBillboard: React.FC<{
     </section>
   );
 };
+
 
 /* ─── Genre Filter Strip ────────────────────────────────── */
 const GENRES = ['All', 'Sci-Fi', 'Action', 'Drama', 'Thriller', 'Romance',
@@ -386,10 +669,12 @@ export const Home: React.FC<HomeProps> = ({ currentUser }) => {
 
       {/* ── Hero Billboard ── */}
       <HeroBillboard
+        movies={movies}
         featured={featured}
         searchQuery={searchQuery}
         onSearch={setSearchQuery}
       />
+
 
       {/* ── 3 Compact Aligned Statistic Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">

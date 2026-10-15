@@ -53,8 +53,13 @@ const BACKDROP_URLS: Record<string, string> = {
   m23: 'https://image.tmdb.org/t/p/w1280/nlCHUW2Y9jvtiIdvGhFUyihvRnc.jpg',                             // Mad Max: Fury Road
   m27: 'https://image.tmdb.org/t/p/w1280/Ab8mkHmkYADjU7wQiOkia99GQI.jpg',                             // Spirited Away
   m29: 'https://image.tmdb.org/t/p/w1280/vL5W4ABHuLDCAt9dfAhACmFDGDu.jpg',                             // Avatar
-  m30: 'https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',                             // Titanic
+  m30: 'https://image.tmdb.org/t/p/w1280/yDI6D5ZQh67YU4r2ms8qcSbAviZ.jpg',                             // Titanic
 };
+
+/** Returns true if a specific movie_id has a verified landscape backdrop. */
+export function hasBackdrop(movieId: string): boolean {
+  return Boolean(BACKDROP_URLS[movieId]);
+}
 
 /** Returns a full poster URL for a given movie_id, or null if not mapped. */
 export function getPosterUrl(movieId: string): string | null {
@@ -70,3 +75,4 @@ export function getPosterUrlOrUndefined(movieId: string): string | undefined {
 export function getBackdropUrl(movieId: string): string {
   return BACKDROP_URLS[movieId] || BACKDROP_URLS.m02; // Default to Interstellar backdrop
 }
+
