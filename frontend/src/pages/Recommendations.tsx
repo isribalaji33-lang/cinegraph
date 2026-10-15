@@ -77,24 +77,79 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
       </div>
 
       {/* Tunable Weights Slider Panel */}
-      <div className="glass-panel rounded-2xl p-6 border border-cine-border space-y-4">
-        <div className="flex items-center gap-2">
-          <Sliders className="w-4 h-4 text-rose-400" />
-          <h3 className="font-heading font-bold text-sm text-white uppercase tracking-wider">
-            Scoring Formula & Tunable Model Weights
-          </h3>
+      <div className="glass-panel rounded-2xl p-6 border border-white/10 space-y-5 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400">
+              <Sliders className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-heading font-bold text-sm text-white uppercase tracking-wider">
+                Scoring Formula & Tunable Model Weights
+              </h3>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Dynamic linear combination of collaborative, content, knowledge graph, and popularity signals.
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Preset Badges */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-mono text-zinc-500 mr-1">Presets:</span>
+            {[
+              { label: 'Balanced Hybrid', w: { collaborative: 0.40, content: 0.30, graph: 0.20, popularity: 0.10 } },
+              { label: 'Graph-Centric', w: { collaborative: 0.15, content: 0.15, graph: 0.60, popularity: 0.10 } },
+              { label: 'Collab-Heavy', w: { collaborative: 0.60, content: 0.20, graph: 0.10, popularity: 0.10 } },
+              { label: 'Content-Pure', w: { collaborative: 0.15, content: 0.65, graph: 0.10, popularity: 0.10 } },
+            ].map(preset => (
+              <button
+                key={preset.label}
+                onClick={() => setWeights(preset.w)}
+                className="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-white/[0.05] hover:bg-white/[0.12] border border-white/10 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <p className="text-xs text-slate-400">
-          Adjust the sliders to dynamically tune the recommendation algorithm weights in real time:
-        </p>
+        {/* Visual Segmented Weight Ratio Bar */}
+        <div className="space-y-1.5">
+          <div className="h-2 rounded-full overflow-hidden flex bg-white/5 border border-white/10 p-[1px]">
+            <div
+              className="h-full bg-rose-500 rounded-l-full transition-all duration-300"
+              style={{ width: `${Math.round(weights.collaborative * 100)}%` }}
+              title={`Collaborative: ${Math.round(weights.collaborative * 100)}%`}
+            />
+            <div
+              className="h-full bg-amber-400 transition-all duration-300"
+              style={{ width: `${Math.round(weights.content * 100)}%` }}
+              title={`Content: ${Math.round(weights.content * 100)}%`}
+            />
+            <div
+              className="h-full bg-emerald-400 transition-all duration-300"
+              style={{ width: `${Math.round(weights.graph * 100)}%` }}
+              title={`Graph: ${Math.round(weights.graph * 100)}%`}
+            />
+            <div
+              className="h-full bg-cyan-400 rounded-r-full transition-all duration-300"
+              style={{ width: `${Math.round(weights.popularity * 100)}%` }}
+              title={`Popularity: ${Math.round(weights.popularity * 100)}%`}
+            />
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 pt-1">
           {/* Collaborative Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Collaborative</span>
-              <span className="text-rose-400 font-bold">{Math.round(weights.collaborative * 100)}%</span>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                Collaborative
+              </span>
+              <span className="text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">{Math.round(weights.collaborative * 100)}%</span>
             </div>
             <input
               type="range"
@@ -105,14 +160,17 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
               onChange={(e) => setWeights({ ...weights, collaborative: parseFloat(e.target.value) })}
               className="w-full accent-rose-500 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500">Peer ratings & mean-centered user correlation</p>
+            <p className="text-[11px] text-zinc-500">Peer correlation & rating overlaps</p>
           </div>
 
           {/* Content Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Content-Based</span>
-              <span className="text-amber-400 font-bold">{Math.round(weights.content * 100)}%</span>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                Content DNA
+              </span>
+              <span className="text-amber-400 font-bold bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">{Math.round(weights.content * 100)}%</span>
             </div>
             <input
               type="range"
@@ -123,14 +181,17 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
               onChange={(e) => setWeights({ ...weights, content: parseFloat(e.target.value) })}
               className="w-full accent-amber-500 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500">TF-IDF synopsis + metadata structure</p>
+            <p className="text-[11px] text-zinc-500">TF-IDF metadata & genre similarity</p>
           </div>
 
           {/* Graph Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Graph Signals</span>
-              <span className="text-emerald-400 font-bold">{Math.round(weights.graph * 100)}%</span>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                Knowledge Graph
+              </span>
+              <span className="text-emerald-400 font-bold bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">{Math.round(weights.graph * 100)}%</span>
             </div>
             <input
               type="range"
@@ -141,14 +202,17 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
               onChange={(e) => setWeights({ ...weights, graph: parseFloat(e.target.value) })}
               className="w-full accent-emerald-500 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500">Shared directors, co-stars & multi-hop paths</p>
+            <p className="text-[11px] text-zinc-500">Multi-hop paths & co-star relations</p>
           </div>
 
           {/* Popularity Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs font-mono">
-              <span className="text-slate-300">Popularity Baseline</span>
-              <span className="text-cyan-400 font-bold">{Math.round(weights.popularity * 100)}%</span>
+          <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                Global Popularity
+              </span>
+              <span className="text-cyan-400 font-bold bg-cyan-400/10 px-2 py-0.5 rounded border border-cyan-400/20">{Math.round(weights.popularity * 100)}%</span>
             </div>
             <input
               type="range"
@@ -159,7 +223,7 @@ export const Recommendations: React.FC<RecommendationsProps> = ({ currentUser })
               onChange={(e) => setWeights({ ...weights, popularity: parseFloat(e.target.value) })}
               className="w-full accent-cyan-500 cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500">Critical acclaim & global rating counts</p>
+            <p className="text-[11px] text-zinc-500">Bayesian rating mean & volume</p>
           </div>
         </div>
       </div>

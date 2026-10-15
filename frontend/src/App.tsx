@@ -28,15 +28,24 @@ export const App: React.FC = () => {
   // ── Main app shell ──────────────────────────────────────
   return (
     <Router>
-      <div className="min-h-screen" style={{ background: '#0a0a0f', color: '#f5f5f1' }}>
-        <Navbar
-          currentUser={currentUser}
-          onUserChange={setCurrentUser}
-          onSwitchProfile={() => setCurrentUser(null)}
-        />
+      <div className="min-h-screen relative overflow-x-hidden" style={{ background: '#07070b', color: '#f5f5f1' }}>
+        {/* Atmospheric ambient lighting & subtle tech grid */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <div className="absolute top-[-10%] left-[-5%] w-[650px] h-[650px] rounded-full bg-gradient-to-br from-[#e50914]/15 via-rose-900/5 to-transparent blur-[140px] opacity-70" />
+          <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] rounded-full bg-gradient-to-bl from-[#018bff]/12 via-cyan-900/5 to-transparent blur-[140px] opacity-60" />
+          <div className="absolute bottom-[-10%] left-[20%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-amber-500/8 via-transparent to-transparent blur-[120px] opacity-40" />
+          <div className="absolute inset-0 grid-pattern opacity-25" />
+        </div>
 
-        <main className="max-w-[1400px] w-full mx-auto px-4 sm:px-6">
-          <Routes>
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <Navbar
+            currentUser={currentUser}
+            onUserChange={setCurrentUser}
+            onSwitchProfile={() => setCurrentUser(null)}
+          />
+
+          <main className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 flex-grow">
+            <Routes>
             <Route path="/"                element={<Home currentUser={currentUser} />} />
             <Route path="/recommendations" element={<Recommendations currentUser={currentUser} />} />
             <Route path="/lab"             element={<LiveLab />} />
@@ -67,6 +76,7 @@ export const App: React.FC = () => {
             </div>
           </div>
         </footer>
+        </div>
       </div>
     </Router>
   );

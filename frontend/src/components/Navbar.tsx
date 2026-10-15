@@ -103,28 +103,25 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
           </Link>
 
           {/* ── Desktop Nav ── */}
-          <nav className="hidden xl:flex items-center gap-0.5 flex-1 justify-center">
+          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center px-2">
             {NAV_LINKS.map(link => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative px-2.5 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`relative px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap ${
                     active
-                      ? 'text-white'
-                      : 'text-[#a3a3b3] hover:text-white'
+                      ? 'text-white bg-white/[0.08] border border-white/10 shadow-[0_0_20px_rgba(229,9,20,0.15)] ring-1 ring-white/10'
+                      : 'text-[#9494a6] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
-                  {active && (
-                    <span className="absolute inset-0 bg-white/6 rounded-lg" />
-                  )}
                   <span className="relative">{link.name}</span>
                   {link.badge && (
-                    <span className={`relative text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase tracking-wider ${
+                    <span className={`relative text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
                       link.badge === 'Pillar 1'
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                     }`}>
                       {link.badge}
                     </span>
@@ -139,14 +136,19 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
             {/* Neo4j Status */}
             <Link
               to="/admin"
-              className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-mono border transition-all flex-shrink-0 ${
+              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all duration-300 flex-shrink-0 ${
                 dbStatus?.connected
-                  ? 'bg-emerald-950/50 border-emerald-500/30 text-emerald-400 hover:border-emerald-400/60'
-                  : 'bg-red-950/50 border-red-500/30 text-red-400'
+                  ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:border-emerald-400'
+                  : 'bg-red-950/40 border-red-500/40 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.15)]'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${dbStatus?.connected ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
-              <span>{dbStatus?.connected ? 'Neo4j Live' : 'Offline'}</span>
+              <span className="relative flex h-2 w-2">
+                {dbStatus?.connected && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus?.connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+              </span>
+              <span className="font-semibold tracking-wide">{dbStatus?.connected ? 'Neo4j Live' : 'Offline'}</span>
             </Link>
 
             {/* User Selector */}
