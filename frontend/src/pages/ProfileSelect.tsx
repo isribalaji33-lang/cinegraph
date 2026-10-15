@@ -33,16 +33,47 @@ const COUNTRY_FLAGS: Record<string, string> = {
   'Spain': '🇪🇸', 'Italy': '🇮🇹', 'Mexico': '🇲🇽', 'Argentina': '🇦🇷',
 };
 
+const FALLBACK_USERS = [
+  { user_id: 'u01', username: 'alex_vance', country: 'USA', is_cold_start: false },
+  { user_id: 'u02', username: 'elena_rostova', country: 'Canada', is_cold_start: false },
+  { user_id: 'u03', username: 'marcus_chen', country: 'UK', is_cold_start: false },
+  { user_id: 'u04', username: 'sarah_miller', country: 'Germany', is_cold_start: false },
+  { user_id: 'u05', username: 'kenji_sato', country: 'Japan', is_cold_start: false },
+  { user_id: 'u06', username: 'priya_sharma', country: 'India', is_cold_start: false },
+  { user_id: 'u07', username: 'lucas_silva', country: 'Brazil', is_cold_start: false },
+  { user_id: 'u08', username: 'amira_hassan', country: 'Egypt', is_cold_start: false },
+  { user_id: 'u09', username: 'david_kim', country: 'South Korea', is_cold_start: false },
+  { user_id: 'u10', username: 'clara_dupont', country: 'France', is_cold_start: false },
+  { user_id: 'u11', username: 'mateo_garcia', country: 'Spain', is_cold_start: false },
+  { user_id: 'u12', username: 'olivia_smith', country: 'Australia', is_cold_start: false },
+  { user_id: 'u13', username: 'liam_obrien', country: 'Ireland', is_cold_start: false },
+  { user_id: 'u14', username: 'fatima_almansoori', country: 'UAE', is_cold_start: false },
+  { user_id: 'u15', username: 'chloe_rivera', country: 'USA', is_cold_start: true },
+];
+
 export const ProfileSelect: React.FC<ProfileSelectProps> = ({ onSelect }) => {
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>(FALLBACK_USERS);
+  const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     fetchJson<any[]>('/users')
-      .then(setUsers)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setUsers(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend waking up, using ready profiles:', err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleClick = (userId: string) => {
