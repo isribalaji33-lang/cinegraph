@@ -6,21 +6,23 @@
 
 /* ─── Design Tokens ──────────────────────────────────────────── */
 :root {
-  --bg-void:      #050507;
-  --bg-base:      #0a0a0f;
-  --bg-surface:   #111118;
-  --bg-card:      #16161f;
-  --bg-hover:     #1e1e2a;
-  --accent-red:   #e50914;
-  --accent-gold:  #f5c518;
-  --accent-neo4j: #018bff;
-  --accent-cyan:  #00d4ff;
-  --text-primary: #f5f5f1;
-  --text-muted:   #a3a3b3;
-  --text-faint:   #5a5a6e;
-  --border:       rgba(255,255,255,0.07);
-  --border-glow:  rgba(229,9,20,0.4);
-  --shadow-card:  0 8px 32px rgba(0,0,0,0.6);
+  --bg-void:      #040406;
+  --bg-base:      #08080C;
+  --bg-surface:   #111116;
+  --bg-card:      #16161E;
+  --bg-hover:     #1E1E28;
+  --accent-red:   #F10B20;
+  --accent-red-hover: #D7081B;
+  --accent-gold:  #F59E0B;
+  --accent-neo4j: #018BFF;
+  --accent-cyan:  #00D4FF;
+  --accent-green: #10B981;
+  --text-primary: #F8FAFC;
+  --text-muted:   #94A3B8;
+  --text-faint:   #64748B;
+  --border:       rgba(255,255,255,0.08);
+  --border-glow:  rgba(241,11,32,0.35);
+  --shadow-card:  0 8px 24px rgba(0,0,0,0.5);
   --radius-card:  12px;
 }
 
@@ -193,43 +195,85 @@
   .badge-gold { background: rgba(245,197,24,0.15); color: #fcd34d; border: 1px solid rgba(245,197,24,0.4); }
   .badge-green { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.4); }
 
-  /* Btn */
+  /* Buttons */
   .btn-primary {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 10px 22px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 14px;
     background: var(--accent-red);
-    color: white;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    color: #ffffff;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
+    box-shadow: 0 4px 16px rgba(241, 11, 32, 0.3);
   }
-  .btn-primary:hover {
-    background: #c0000c;
-    transform: scale(1.02);
-    box-shadow: 0 0 20px rgba(229,9,20,0.5);
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-red-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(241, 11, 32, 0.45);
   }
+  .btn-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(241, 11, 32, 0.35);
+  }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
   .btn-secondary {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 10px 22px;
-    border-radius: 8px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 14px;
-    background: rgba(255,255,255,0.1);
-    color: white;
-    transition: background 0.2s, transform 0.15s;
+    background: rgba(255, 255, 255, 0.06);
+    color: #F8FAFC;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
   }
-  .btn-secondary:hover {
-    background: rgba(255,255,255,0.18);
-    transform: scale(1.02);
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+  }
+  .btn-secondary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  }
+  .btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Compact Aligned Stat Card */
+  .stat-card {
+    background: #111116;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 
   /* Section label */

@@ -36,6 +36,26 @@ const POSTER_URLS: Record<string, string> = {
   m30: 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg',                             // Titanic
 };
 
+const BACKDROP_URLS: Record<string, string> = {
+  m01: 'https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',                             // Inception
+  m02: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',                             // Interstellar
+  m03: 'https://image.tmdb.org/t/p/w1280/yIZ1xendyqKvY3PqWiUrOD2Rupv.jpg',                             // Arrival
+  m04: 'https://image.tmdb.org/t/p/w1280/sAtoMqDVhNDQBc3QJL3RF6hlxGq.jpg',                             // Blade Runner 2049
+  m05: 'https://image.tmdb.org/t/p/w1280/cWUOv3H7YFwvKeRwGdY3KobRsNG.jpg',                             // The Wolf of Wall Street
+  m07: 'https://image.tmdb.org/t/p/w1280/7vdY55b2dI0m5wTfvJvhbFk8gC7.jpg',                             // Inglourious Basterds
+  m09: 'https://image.tmdb.org/t/p/w1280/qJeU7KM4nT2C1Wp6H0O8dC6M9jF.jpg',                             // La La Land
+  m10: 'https://image.tmdb.org/t/p/w1280/6bbZ6XNIlv31DYKObwm4EJvIgkZ.jpg',                             // Whiplash
+  m11: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',                             // Fight Club
+  m13: 'https://image.tmdb.org/t/p/w1280/b85hn2q2y13t8sE9nZt2c3cK62j.jpg',                             // Gladiator
+  m14: 'https://image.tmdb.org/t/p/w1280/syizvlG7i1T67nJ8c0sN7d81z2.jpg',                             // The Martian
+  m15: 'https://image.tmdb.org/t/p/w1280/7c9UVPPiTPltouxShY9f0uG7T6L.jpg',                             // Saving Private Ryan
+  m17: 'https://image.tmdb.org/t/p/w1280/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg',                             // Parasite
+  m23: 'https://image.tmdb.org/t/p/w1280/nlCHUW2Y9jvtiIdvGhFUyihvRnc.jpg',                             // Mad Max: Fury Road
+  m27: 'https://image.tmdb.org/t/p/w1280/Ab8mkHmkYADjU7wQiOkia99GQI.jpg',                             // Spirited Away
+  m29: 'https://image.tmdb.org/t/p/w1280/vL5W4ABHuLDCAt9dfAhACmFDGDu.jpg',                             // Avatar
+  m30: 'https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',                             // Titanic
+};
+
 /** Returns a full poster URL for a given movie_id, or null if not mapped. */
 export function getPosterUrl(movieId: string): string | null {
   return POSTER_URLS[movieId] || null;
@@ -44,4 +64,9 @@ export function getPosterUrl(movieId: string): string | null {
 /** Returns poster URL or undefined so callers can fall back to gradient art. */
 export function getPosterUrlOrUndefined(movieId: string): string | undefined {
   return getPosterUrl(movieId) ?? undefined;
+}
+
+/** Returns a cinematic landscape backdrop image URL for billboards. */
+export function getBackdropUrl(movieId: string): string {
+  return BACKDROP_URLS[movieId] || BACKDROP_URLS.m02; // Default to Interstellar backdrop
 }

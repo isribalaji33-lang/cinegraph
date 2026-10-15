@@ -121,33 +121,32 @@ export const PosterCard: React.FC<MovieCardProps> = ({
 
   return (
     <div
-      className={`group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
+      className={`group relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 border border-white/[0.08] bg-[#111116] ${
         isHeroRow
-          ? 'aspect-[2/3] min-w-[160px] sm:min-w-[180px] hover:-translate-y-2 hover:scale-105'
-          : 'hover:-translate-y-1 hover:scale-[1.02]'
+          ? 'aspect-[2/3] min-w-[155px] sm:min-w-[170px] hover:-translate-y-1.5 hover:border-white/20 hover:shadow-xl'
+          : 'hover:-translate-y-1 hover:border-white/20 hover:shadow-xl'
       }`}
       style={{
         boxShadow: hovered
-          ? `0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px ${accentColor}30`
-          : '0 4px 20px rgba(0,0,0,0.5)',
-        transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          ? `0 16px 36px rgba(0,0,0,0.7), 0 0 0 1px ${accentColor}40`
+          : '0 4px 16px rgba(0,0,0,0.5)',
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* ── Poster Art Area ── */}
-      <Link to={`/movies/${movie.movie_id}`} className={`block relative ${isHeroRow ? 'h-full' : 'aspect-[2/3]'} overflow-hidden bg-[#0d0d14]`}>
+      <Link to={`/movies/${movie.movie_id}`} className="block relative w-full h-full overflow-hidden bg-[#0A0A0E]">
         {posterUrl && !imgError ? (
           <>
             <img
               src={posterUrl}
               alt={movie.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               onError={() => setImgError(true)}
             />
             {/* Ambient vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent pointer-events-none" />
           </>
         ) : (
           <PosterArt title={movie.title} genres={movie.genres} palette={palette} />
@@ -156,17 +155,14 @@ export const PosterCard: React.FC<MovieCardProps> = ({
         {/* Top Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10">
           {movie.hybrid_score !== undefined && (
-            <span
-              className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-white"
-              style={{ background: '#e50914' }}
-            >
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold text-white bg-[#F10B20] shadow-sm">
               {Math.round(movie.hybrid_score * 100)}% Match
             </span>
           )}
           {movie.avg_rating !== undefined && movie.avg_rating > 0 && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/60 text-amber-300 flex items-center gap-0.5">
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-black/75 backdrop-blur-sm text-amber-300 flex items-center gap-0.5 border border-white/10">
               <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
-              {movie.avg_rating.toFixed(1)}
+              {Number(movie.avg_rating).toFixed(1)}
             </span>
           )}
         </div>
@@ -174,25 +170,25 @@ export const PosterCard: React.FC<MovieCardProps> = ({
         {/* Age Rating */}
         {movie.age_rating && (
           <div className="absolute top-2 right-2 z-10">
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono border border-white/30 bg-black/60 text-white/70">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono border border-white/20 bg-black/75 backdrop-blur-sm text-white/80">
               {movie.age_rating}
             </span>
           </div>
         )}
 
-        {/* Bottom Genre Tags (visible on hover for default, always for hero) */}
-        <div className={`absolute bottom-2 left-2 right-2 z-10 flex flex-wrap gap-1 transition-opacity duration-200 ${
-          isHeroRow ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-        }`}>
-          {movie.genres?.slice(0, 2).map(g => (
-            <span
-              key={g}
-              className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-black/70 backdrop-blur-sm"
-              style={{ color: GENRE_COLORS[g] || '#a3a3b3' }}
-            >
-              {g}
-            </span>
-          ))}
+        {/* Bottom Title & Metadata Overlay (Always legible) */}
+        <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-black/95 via-black/75 to-transparent flex flex-col justify-end z-10 pointer-events-none">
+          <p className="text-xs font-bold text-white line-clamp-1 group-hover:text-[#F10B20] transition-colors">
+            {movie.title}
+          </p>
+          <div className="flex items-center justify-between text-[10px] text-[#94A3B8] mt-0.5 font-mono">
+            <span>{movie.release_year} {movie.duration ? `· ${movie.duration}m` : ''}</span>
+            {movie.genres?.[0] && (
+              <span className="text-zinc-300 font-sans truncate max-w-[70px]">
+                {movie.genres[0]}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
 

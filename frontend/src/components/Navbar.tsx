@@ -15,9 +15,9 @@ interface NavbarProps {
 const NAV_LINKS = [
   { name: 'Discover',        path: '/',            icon: Film },
   { name: 'For You',         path: '/recommendations', icon: Sparkles },
-  { name: 'Neo4j Live Lab',  path: '/lab',          icon: Network,   badge: 'Pillar 1' },
-  { name: 'Compare & What-If', path: '/compare',   icon: Scale,     badge: 'Pillar 3' },
-  { name: 'ML Evaluation',   path: '/ml-eval',      icon: Activity,  badge: 'Pillar 3' },
+  { name: 'Neo4j Live Lab',  path: '/lab',          icon: Network,   badge: 'P1' },
+  { name: 'Compare & What-If', path: '/compare',   icon: Scale,     badge: 'P3' },
+  { name: 'ML Evaluation',   path: '/ml-eval',      icon: Activity,  badge: 'ML' },
   { name: 'Graph Explorer',  path: '/explore',      icon: Network },
   { name: 'Analytics',       path: '/analytics',    icon: BarChart3 },
   { name: 'Admin',           path: '/admin',        icon: Database },
@@ -53,7 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 15);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -76,52 +76,49 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'bg-[#0a0a0f]/95 backdrop-blur-xl border-b border-white/5 shadow-2xl'
-            : 'bg-gradient-to-b from-[#0a0a0f] to-transparent'
+            ? 'bg-[#08080C]/95 backdrop-blur-xl border-b border-white/[0.08] shadow-2xl'
+            : 'bg-gradient-to-b from-[#08080C] via-[#08080C]/80 to-transparent'
         }`}
       >
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-3">
 
           {/* ── Brand ── */}
           <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="relative w-9 h-9">
-              <div className="w-9 h-9 rounded-lg bg-[#e50914] flex items-center justify-center shadow-lg shadow-red-900/60 group-hover:shadow-red-600/60 transition-shadow">
-                <Film className="w-5 h-5 text-white" />
-              </div>
-              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0a0a0f] animate-pulse" />
+            <div className="w-8 h-8 rounded-lg bg-[#F10B20] flex items-center justify-center shadow-md shadow-red-900/40 group-hover:scale-105 transition-transform">
+              <Film className="w-4 h-4 text-white" />
             </div>
             <div className="leading-none">
-              <span className="text-lg font-bold font-heading text-white tracking-tight">
-                Cine<span style={{ color: '#e50914' }}>Graph</span>
+              <span className="text-base font-bold font-heading text-white tracking-tight">
+                Cine<span style={{ color: '#F10B20' }}>Graph</span>
               </span>
-              <span className="block text-[9px] text-[#5a5a6e] font-mono uppercase tracking-widest mt-0.5">
+              <span className="block text-[8px] text-[#64748B] font-mono uppercase tracking-widest mt-0.5">
                 Neo4j · ML Engine
               </span>
             </div>
           </Link>
 
           {/* ── Desktop Nav ── */}
-          <nav className="hidden lg:flex items-center gap-1 flex-1 justify-center px-2">
+          <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center px-1">
             {NAV_LINKS.map(link => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative px-3 py-1.5 rounded-lg text-xs xl:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`relative px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
                     active
-                      ? 'text-white bg-white/[0.08] border border-white/10 shadow-[0_0_20px_rgba(229,9,20,0.15)] ring-1 ring-white/10'
-                      : 'text-[#9494a6] hover:text-white hover:bg-white/[0.04]'
+                      ? 'text-white bg-white/[0.06] font-semibold after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[2px] after:bg-[#F10B20] after:rounded-full'
+                      : 'text-[#94A3B8] hover:text-white hover:bg-white/[0.03]'
                   }`}
                 >
-                  <span className="relative">{link.name}</span>
+                  <span>{link.name}</span>
                   {link.badge && (
-                    <span className={`relative text-[9px] px-1.5 py-0.5 rounded-full font-mono font-bold uppercase tracking-wider ${
-                      link.badge === 'Pillar 1'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                    <span className={`text-[8px] px-1 py-0.2 rounded font-mono font-bold uppercase ${
+                      active
+                        ? 'bg-[#F10B20]/20 text-[#F10B20] border border-[#F10B20]/30'
+                        : 'bg-white/[0.06] text-[#94A3B8] border border-white/[0.06]'
                     }`}>
                       {link.badge}
                     </span>
@@ -132,23 +129,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
           </nav>
 
           {/* ── Right Controls ── */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Neo4j Status */}
             <Link
               to="/admin"
-              className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono border transition-all duration-300 flex-shrink-0 ${
+              className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono border transition-all duration-200 flex-shrink-0 ${
                 dbStatus?.connected
-                  ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:border-emerald-400'
-                  : 'bg-red-950/40 border-red-500/40 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.15)]'
+                  ? 'bg-emerald-950/30 border-emerald-500/30 text-emerald-300 hover:border-emerald-400/60'
+                  : 'bg-red-950/30 border-red-500/30 text-red-300'
               }`}
+              title={dbStatus?.connected ? 'Neo4j Bolt Driver Live' : 'Database Disconnected'}
             >
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5">
                 {dbStatus?.connected && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus?.connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${dbStatus?.connected ? 'bg-emerald-400' : 'bg-red-400'}`} />
               </span>
-              <span className="font-semibold tracking-wide">{dbStatus?.connected ? 'Neo4j Live' : 'Offline'}</span>
+              <span className="font-medium tracking-wide">{dbStatus?.connected ? 'Neo4j Live' : 'Offline'}</span>
             </Link>
 
             {/* User Selector */}
@@ -267,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
       </header>
 
       {/* Spacer to push content below fixed navbar */}
-      <div className="h-16" />
+      <div className="h-14" />
     </>
   );
 };

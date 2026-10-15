@@ -9,6 +9,8 @@ export const AdminExplorer: React.FC = () => {
   const [reSeeding, setReSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
 
+  const [confirmReseedOpen, setConfirmReseedOpen] = useState(false);
+
   const loadStatus = async () => {
     setLoading(true);
     try {
@@ -30,6 +32,7 @@ export const AdminExplorer: React.FC = () => {
   }, []);
 
   const handleReSeed = async () => {
+    setConfirmReseedOpen(false);
     setReSeeding(true);
     setSeedMessage(null);
     try {
@@ -65,14 +68,43 @@ export const AdminExplorer: React.FC = () => {
         </div>
 
         <button
-          onClick={handleReSeed}
+          onClick={() => setConfirmReseedOpen(true)}
           disabled={reSeeding}
-          className="px-4 py-2 rounded-xl text-xs font-mono font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-900/30 flex items-center gap-2 self-start sm:self-auto transition-all disabled:opacity-50"
+          className="btn-primary text-xs font-mono"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <RefreshCw className={`w-3.5 h-3.5 ${reSeeding ? 'animate-spin' : ''}`} />
           <span>{reSeeding ? 'Seeding...' : 'Reset & Re-Seed Database'}</span>
         </button>
       </div>
+
+      {/* Confirmation Dialog */}
+      {confirmReseedOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#111116] border border-white/10 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3 text-amber-400">
+              <AlertTriangle className="w-6 h-6 shrink-0" />
+              <h3 className="font-heading font-bold text-lg text-white">Confirm Database Reset</h3>
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              This operation will reset and re-synchronize all 15 users, 30 movies, and interaction edges in Neo4j AuraDB with the deterministic academic benchmark specification.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setConfirmReseedOpen(false)}
+                className="btn-secondary text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReSeed}
+                className="btn-primary text-xs"
+              >
+                Yes, Reset &amp; Reseed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {seedMessage && (
         <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono">

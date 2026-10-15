@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import {
   Sparkles, TrendingUp, Award, Film, Search, Play,
   Info, ChevronRight, ChevronLeft, Zap, Network, Star,
-  BarChart3, Activity, ArrowRight,
+  BarChart3, Activity, ArrowRight, Users,
 } from 'lucide-react';
 import { fetchJson } from '../api/client';
 import { PosterCard } from '../components/PosterCard';
 import { RatingModal } from '../components/RatingModal';
+import { getBackdropUrl } from '../data/moviePosters';
 
 interface HomeProps { currentUser: string; }
 
@@ -102,107 +103,99 @@ const HeroBillboard: React.FC<{
   featured?: any;
   searchQuery: string;
   onSearch: (q: string) => void;
-  stats: { movies: number; users: number; rels: number };
-}> = ({ featured, searchQuery, onSearch, stats }) => {
-  const title = featured?.title || 'CineGraph';
-  const desc = featured?.description || 'Discover the connections. Find your next favorite film with Neo4j graph-powered intelligence.';
-  const genre = featured?.genres?.[0] || 'Sci-Fi';
+}> = ({ featured, searchQuery, onSearch }) => {
+  const title = featured?.title || 'Interstellar';
+  const desc = featured?.description || 'A team of explorers travel through a wormhole in space in an attempt to ensure humanity\'s survival.';
+  const year = featured?.release_year || 2014;
+  const duration = featured?.duration || 169;
+  const rating = featured?.avg_rating || 4.8;
+  const genres = featured?.genres || ['Sci-Fi', 'Drama', 'Adventure'];
+  const backdropUrl = getBackdropUrl(featured?.movie_id || 'm02');
 
   return (
-    <section className="relative -mx-4 sm:-mx-6 mb-10">
-      {/* Background Art */}
-      <div className="relative overflow-hidden" style={{ minHeight: 520 }}>
-        {/* Gradient BG */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse at 70% 40%, #6b001540 0%, #0a0a0f 65%)',
-          }}
+    <section className="relative -mx-4 sm:-mx-6 mb-6 overflow-hidden rounded-b-2xl border-b border-white/[0.08] shadow-2xl">
+      {/* Background Cinematic Artwork with subtle graph overlay */}
+      <div className="relative w-full h-[380px] sm:h-[420px] bg-[#08080C] overflow-hidden">
+        <img
+          src={backdropUrl}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-60 scale-105 transition-transform duration-1000"
         />
-        {/* Animated particles */}
-        {[...Array(12)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full opacity-20"
-            style={{
-              width: Math.random() * 4 + 2,
-              height: Math.random() * 4 + 2,
-              background: i % 3 === 0 ? '#e50914' : i % 3 === 1 ? '#018bff' : '#f5c518',
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 3}s`,
-            }}
-          />
-        ))}
 
-        {/* Content */}
-        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 pt-12 pb-16">
-          <div className="max-w-2xl space-y-5">
-            {/* Eyebrow */}
-            <div className="flex items-center gap-2">
-              <span className="badge badge-red">
-                <Network className="w-3 h-3" /> Neo4j Graph-Powered
+        {/* Cinematic gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#08080C] via-[#08080C]/85 to-transparent w-full sm:w-3/4 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#08080C] via-[#08080C]/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(241,11,32,0.12),transparent_60%)] z-10 pointer-events-none" />
+
+        {/* Content Area */}
+        <div className="relative z-20 max-w-[1440px] h-full mx-auto px-4 sm:px-6 flex flex-col justify-end pb-8 pt-4">
+          <div className="max-w-2xl space-y-3.5">
+            {/* Tag Pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-[#F10B20]/20 text-[#F10B20] border border-[#F10B20]/30 shadow-sm">
+                Featured Blockbuster
               </span>
-              <span className="badge badge-blue">
-                <Activity className="w-3 h-3" /> Live ML Engine
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-black/60 text-amber-300 border border-white/10">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                {Number(rating).toFixed(1)} Rating
+              </span>
+              <span className="text-xs font-mono text-zinc-400">
+                {year} · {duration} min · {genres.slice(0, 2).join(', ')}
               </span>
             </div>
 
             {/* Title */}
-            <div>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black font-heading leading-none tracking-tight text-white">
-                Cine<span style={{ color: '#e50914' }}>Graph</span>
-              </h1>
-              <p className="mt-2 text-base sm:text-lg text-[#a3a3b3] leading-relaxed max-w-xl">
-                Discover the connections. Find your next favorite with graph traversals, content DNA, and ML.
-              </p>
-            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-heading tracking-tight text-white uppercase drop-shadow-md">
+              {title}
+            </h1>
 
-            {/* Search */}
-            <div className="relative max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5a5a6e]" />
+            {/* Subtitle / Synopsis with high contrast */}
+            <p className="text-xs sm:text-sm text-[#E2E8F0] leading-relaxed line-clamp-2 max-w-xl">
+              {desc}
+            </p>
+
+            {/* Search Input Field */}
+            <div className="relative max-w-lg pt-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => onSearch(e.target.value)}
-                placeholder="Search movies, directors, genres..."
-                className="nf-input pl-11 h-12 text-sm"
+                placeholder="Search movies, directors, genres in Neo4j..."
+                className="w-full h-11 pl-10 pr-14 rounded-xl bg-black/70 border border-white/15 text-white placeholder-[#64748B] text-xs sm:text-sm focus:outline-none focus:border-[#F10B20] focus:ring-1 focus:ring-[#F10B20] backdrop-blur-md transition-all shadow-inner"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => onSearch('')}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-zinc-400 hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-3 pt-1">
-              <Link to="/recommendations" className="btn-primary">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <Link to="/recommendations" className="btn-primary text-xs sm:text-sm">
                 <Sparkles className="w-4 h-4" />
-                Get Recommendations
+                <span>Get Recommendations</span>
               </Link>
-              <Link to="/lab" className="btn-secondary">
-                <Network className="w-4 h-4" />
-                Neo4j Live Lab
+              <Link to="/lab" className="btn-secondary text-xs sm:text-sm">
+                <Network className="w-4 h-4 text-cyan-400" />
+                <span>Neo4j Live Lab</span>
               </Link>
-            </div>
-
-            {/* Live Stats */}
-            <div className="flex items-center gap-6 pt-2">
-              {[
-                { label: 'Films', value: stats.movies, color: '#e50914' },
-                { label: 'Users', value: stats.users, color: '#018bff' },
-                { label: 'Graph Links', value: stats.rels, color: '#f5c518' },
-              ].map(s => (
-                <div key={s.label} className="text-center">
-                  <p className="text-2xl font-black font-heading" style={{ color: s.color }}>
-                    {s.value > 0 ? s.value.toLocaleString() : '—'}
-                  </p>
-                  <p className="text-[10px] text-[#5a5a6e] uppercase tracking-wider mt-0.5">{s.label}</p>
-                </div>
-              ))}
+              {featured?.movie_id && (
+                <Link
+                  to={`/movies/${featured.movie_id}`}
+                  className="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 transition-all flex items-center gap-1.5"
+                >
+                  <Info className="w-4 h-4" />
+                  <span>View Details</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Bottom gradient fade */}
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
       </div>
     </section>
   );
@@ -389,15 +382,56 @@ export const Home: React.FC<HomeProps> = ({ currentUser }) => {
   const showCatalog = searchQuery || selectedGenre;
 
   return (
-    <div className="min-h-screen space-y-10 pb-20 -mx-4 sm:-mx-6 px-4 sm:px-6">
+    <div className="min-h-screen space-y-8 pb-20 -mx-4 sm:-mx-6 px-4 sm:px-6">
 
       {/* ── Hero Billboard ── */}
       <HeroBillboard
         featured={featured}
         searchQuery={searchQuery}
         onSearch={setSearchQuery}
-        stats={stats}
       />
+
+      {/* ── 3 Compact Aligned Statistic Cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <div className="stat-card">
+          <div className="w-9 h-9 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-[#F10B20] shrink-0">
+            <Film className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-xl font-black font-heading text-white">
+              {stats.movies > 0 ? stats.movies : '30'}
+            </p>
+            <p className="text-[11px] font-semibold text-zinc-300">Films Indexed</p>
+            <p className="text-[10px] text-[#64748B] font-mono">Catalog nodes in Neo4j AuraDB</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-[#018BFF] shrink-0">
+            <Users className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-xl font-black font-heading text-white">
+              {stats.users > 0 ? stats.users : '15'}
+            </p>
+            <p className="text-[11px] font-semibold text-zinc-300">Active Profiles</p>
+            <p className="text-[10px] text-[#64748B] font-mono">Stratified taste clusters</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-[#F59E0B] shrink-0">
+            <Network className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-xl font-black font-heading text-white">
+              {stats.rels > 0 ? stats.rels.toLocaleString() : '569'}
+            </p>
+            <p className="text-[11px] font-semibold text-zinc-300">Graph Relationships</p>
+            <p className="text-[10px] text-[#64748B] font-mono">Multi-hop traversal connections</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Search / Filter Results ── */}
       {showCatalog && (
@@ -406,7 +440,7 @@ export const Home: React.FC<HomeProps> = ({ currentUser }) => {
           <GenreStrip selected={selectedGenre} onChange={setSelectedGenre} />
 
           <div className="flex items-center gap-2 mb-2">
-            <Film className="w-5 h-5 text-[#e50914]" />
+            <Film className="w-5 h-5 text-[#F10B20]" />
             <h2 className="text-lg font-bold font-heading text-white">
               {searchQuery ? `Results for "${searchQuery}"` : selectedGenre} ({filteredMovies.length})
             </h2>
@@ -418,16 +452,16 @@ export const Home: React.FC<HomeProps> = ({ currentUser }) => {
       {/* ── Content Rows (when no search) ── */}
       {!showCatalog && (
         <>
-          {/* Personalized Recommendations */}
+          {/* Personalized Recommendations (Elevated Position) */}
           <MovieRow
             title="Recommended For You"
-            subtitle="Hybrid scoring: 40% Collab · 30% Content · 20% Graph · 10% Pop"
-            icon={<Sparkles className="w-5 h-5 text-[#e50914]" />}
+            subtitle="Multi-signal ensemble: 40% Collab · 30% Content · 20% Graph · 10% Pop"
+            icon={<Sparkles className="w-5 h-5 text-[#F10B20]" />}
             movies={recs}
             loading={recsLoading}
             onRate={setRatingMovieId}
             badgeLabel="Hybrid ML"
-            badgeColor="#e50914"
+            badgeColor="#F10B20"
           />
 
           {/* Trending */}
