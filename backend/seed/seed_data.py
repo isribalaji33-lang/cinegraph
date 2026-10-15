@@ -356,15 +356,20 @@ def generate_user_interactions():
 
     return ratings, watches, watchlists
 
-def seed_database():
+def seed_database(force: bool = False):
     """Seeds live Neo4j database with deterministic 15 entities and 30 movies."""
     if not is_neo4j_live():
         raise RuntimeError("Live Neo4j instance required for seeding. Fallback data source is disabled.")
 
-    ratings, watches, watchlists = generate_user_interactions()
-
     driver = get_driver()
     with driver.session(database=settings.NEO4J_DATABASE) as session:
+        if not force:
+            m_count = session.run("MATCH (m:Movie) RETURN count(m) AS c").single()["c"]
+            r_count = session.run("MATCH ()-[r:RATED]->() RETURN count(r) AS c").single()["c"]
+            if m_count >= 30 and r_count >= 200:
+                return {"status": "already_seeded", "movies": m_count, "rated": r_count}
+
+        ratings, watches, watchlists = generate_user_interactions()
         session.run("MATCH (n) DETACH DELETE n")
 
         for g in GENRES:
