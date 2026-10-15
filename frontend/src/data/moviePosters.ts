@@ -36,28 +36,23 @@ const POSTER_URLS: Record<string, string> = {
   m30: 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg',                             // Titanic
 };
 
-const BACKDROP_URLS: Record<string, string> = {
+export const BACKDROP_URLS: Record<string, string> = {
   m01: 'https://image.tmdb.org/t/p/w1280/8ZTVqvKDQ8emSGUEMjsS4yHAwrp.jpg',                             // Inception
   m02: 'https://image.tmdb.org/t/p/w1280/xJHokMbljvjADYdit5fK5VQsXEG.jpg',                             // Interstellar
-  m03: 'https://image.tmdb.org/t/p/w1280/yIZ1xendyqKvY3PqWiUrOD2Rupv.jpg',                             // Arrival
-  m04: 'https://image.tmdb.org/t/p/w1280/sAtoMqDVhNDQBc3QJL3RF6hlxGq.jpg',                             // Blade Runner 2049
-  m05: 'https://image.tmdb.org/t/p/w1280/cWUOv3H7YFwvKeRwGdY3KobRsNG.jpg',                             // The Wolf of Wall Street
-  m07: 'https://image.tmdb.org/t/p/w1280/7vdY55b2dI0m5wTfvJvhbFk8gC7.jpg',                             // Inglourious Basterds
-  m09: 'https://image.tmdb.org/t/p/w1280/qJeU7KM4nT2C1Wp6H0O8dC6M9jF.jpg',                             // La La Land
-  m10: 'https://image.tmdb.org/t/p/w1280/6bbZ6XNIlv31DYKObwm4EJvIgkZ.jpg',                             // Whiplash
+  m04: 'https://image.tmdb.org/t/p/w1280/ilRyazdMJwN05exqhwK4tMKBYZs.jpg',                             // Blade Runner 2049
+  m05: 'https://image.tmdb.org/t/p/w1280/kW9LmvYHAaS9iA0tHmZVq8hQYoq.jpg',                             // The Wolf of Wall Street
   m11: 'https://image.tmdb.org/t/p/w1280/hZkgoQYus5vegHoetLkCJzb17zJ.jpg',                             // Fight Club
-  m13: 'https://image.tmdb.org/t/p/w1280/b85hn2q2y13t8sE9nZt2c3cK62j.jpg',                             // Gladiator
-  m14: 'https://image.tmdb.org/t/p/w1280/syizvlG7i1T67nJ8c0sN7d81z2.jpg',                             // The Martian
-  m15: 'https://image.tmdb.org/t/p/w1280/7c9UVPPiTPltouxShY9f0uG7T6L.jpg',                             // Saving Private Ryan
+  m13: 'https://image.tmdb.org/t/p/w1280/aDb548BOkFfI4nFm0kx8A3Ezh7H.jpg',                             // Gladiator
+  m14: 'https://image.tmdb.org/t/p/w1280/3dPhs7hUnQLphDFzdkD407VZDYo.jpg',                             // The Martian
   m17: 'https://image.tmdb.org/t/p/w1280/hiKmpZMGZsrkA3cdce8a7Dpos1j.jpg',                             // Parasite
-  m23: 'https://image.tmdb.org/t/p/w1280/nlCHUW2Y9jvtiIdvGhFUyihvRnc.jpg',                             // Mad Max: Fury Road
-  m27: 'https://image.tmdb.org/t/p/w1280/Ab8mkHmkYADjU7wQiOkia99GQI.jpg',                             // Spirited Away
-  m29: 'https://image.tmdb.org/t/p/w1280/vL5W4ABHuLDCAt9dfAhACmFDGDu.jpg',                             // Avatar
+  m23: 'https://image.tmdb.org/t/p/w1280/ulcAi4dKpAjHwYGS08vNyx9H6I9.jpg',                             // Mad Max: Fury Road
+  m29: 'https://image.tmdb.org/t/p/w1280/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg',                             // Avatar
   m30: 'https://image.tmdb.org/t/p/w1280/yDI6D5ZQh67YU4r2ms8qcSbAviZ.jpg',                             // Titanic
 };
 
 /** Returns true if a specific movie_id has a verified landscape backdrop. */
 export function hasBackdrop(movieId: string): boolean {
+
   return Boolean(BACKDROP_URLS[movieId]);
 }
 

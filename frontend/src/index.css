@@ -398,8 +398,9 @@
 }
 
 .animate-hero-progress {
-  animation: heroProgressBar 7s linear forwards;
+  animation: heroProgressBar 6s linear forwards;
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .animate-ken-burns,

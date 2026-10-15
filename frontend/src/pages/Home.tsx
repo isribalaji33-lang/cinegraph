@@ -9,7 +9,9 @@ import {
 import { fetchJson } from '../api/client';
 import { PosterCard } from '../components/PosterCard';
 import { RatingModal } from '../components/RatingModal';
-import { getBackdropUrl } from '../data/moviePosters';
+import { getBackdropUrl, BACKDROP_URLS } from '../data/moviePosters';
+
+
 
 interface HomeProps { currentUser: string; }
 
@@ -191,7 +193,7 @@ const SEED_SHOWCASE_MOVIES = [
   }
 ];
 
-const ROTATION_INTERVAL = 7000; // 7 seconds per slide
+const ROTATION_INTERVAL = 6000; // 6 seconds per slide
 
 /* ─── Hero Billboard (Cinematic Autoplay Carousel) ──────── */
 const HeroBillboard: React.FC<{
@@ -201,8 +203,7 @@ const HeroBillboard: React.FC<{
   onSearch: (q: string) => void;
 }> = ({ movies, searchQuery, onSearch }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isTabHidden, setIsTabHidden] = useState(false);
   const [isManuallyPaused, setIsManuallyPaused] = useState(false);
 
@@ -248,7 +249,8 @@ const HeroBillboard: React.FC<{
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  const isPaused = isHovered || isFocused || isTabHidden || isManuallyPaused;
+  // Continuous auto-movement: only pause if user is actively searching or clicked pause
+  const isPaused = isSearchFocused || isTabHidden || isManuallyPaused;
 
   // Autoplay timer
   useEffect(() => {
@@ -257,7 +259,7 @@ const HeroBillboard: React.FC<{
       setCurrentIndex(prev => (prev + 1) % showcaseMovies.length);
     }, ROTATION_INTERVAL);
     return () => clearInterval(timer);
-  }, [isPaused, showcaseMovies.length]);
+  }, [isPaused, showcaseMovies.length, currentIndex]);
 
   const handlePrev = () => {
     setCurrentIndex(prev => (prev - 1 + showcaseMovies.length) % showcaseMovies.length);
@@ -274,8 +276,6 @@ const HeroBillboard: React.FC<{
   return (
     <section
       className="group relative -mx-4 sm:-mx-6 mb-6 overflow-hidden rounded-b-2xl border-b border-white/[0.08] shadow-2xl select-none"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       aria-roledescription="carousel"
       aria-label="CineGraph Featured Movie Showcase"
     >
@@ -294,7 +294,13 @@ const HeroBillboard: React.FC<{
             >
               <img
                 src={backdrop}
-                alt=""
+                alt={movie.title}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (target.src !== BACKDROP_URLS.m02) {
+                    target.src = BACKDROP_URLS.m02; // Reliable Interstellar fallback
+                  }
+                }}
                 className={`w-full h-full object-cover object-center ${
                   isActive ? 'animate-ken-burns' : ''
                 }`}
@@ -313,8 +319,6 @@ const HeroBillboard: React.FC<{
         {/* ── Left / Right Navigation Arrows (Visible on hover or keyboard focus) ── */}
         <button
           onClick={handlePrev}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           aria-label={`Previous movie: ${showcaseMovies[(currentIndex - 1 + showcaseMovies.length) % showcaseMovies.length].title}`}
           className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-[#F10B20] text-white/80 hover:text-white border border-white/15 hover:border-[#F10B20] shadow-2xl backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
         >
@@ -323,8 +327,6 @@ const HeroBillboard: React.FC<{
 
         <button
           onClick={handleNext}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
           aria-label={`Next movie: ${showcaseMovies[(currentIndex + 1) % showcaseMovies.length].title}`}
           className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-[#F10B20] text-white/80 hover:text-white border border-white/15 hover:border-[#F10B20] shadow-2xl backdrop-blur-md opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
         >
@@ -377,8 +379,8 @@ const HeroBillboard: React.FC<{
                 type="text"
                 value={searchQuery}
                 onChange={e => onSearch(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
                 placeholder="Search movies, directors, genres in Neo4j..."
                 aria-label="Search movies, directors, genres"
                 className="w-full h-11 pl-10 pr-14 rounded-xl bg-black/75 border border-white/15 text-white placeholder-[#64748B] text-xs sm:text-sm focus:outline-none focus:border-[#F10B20] focus:ring-1 focus:ring-[#F10B20] backdrop-blur-md transition-all shadow-inner"
@@ -426,8 +428,6 @@ const HeroBillboard: React.FC<{
                   <button
                     key={movie.movie_id}
                     onClick={() => setCurrentIndex(idx)}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
                     role="tab"
                     aria-selected={isActive}
                     aria-label={`Show ${movie.title} (${idx + 1} of ${showcaseMovies.length})`}
@@ -454,20 +454,18 @@ const HeroBillboard: React.FC<{
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsManuallyPaused(prev => !prev)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
                 aria-label={isManuallyPaused ? "Resume autoplay" : "Pause autoplay"}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 text-[11px] font-mono transition-colors cursor-pointer"
               >
                 {isManuallyPaused ? (
                   <>
                     <Play className="w-3 h-3 fill-emerald-400 text-emerald-400" />
-                    <span>Play</span>
+                    <span>Resume</span>
                   </>
                 ) : (
                   <>
-                    <Pause className="w-3 h-3 text-amber-400" />
-                    <span>{isPaused ? 'Paused' : 'Auto'}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Auto (6s)</span>
                   </>
                 )}
               </button>
@@ -482,6 +480,7 @@ const HeroBillboard: React.FC<{
     </section>
   );
 };
+
 
 
 /* ─── Genre Filter Strip ────────────────────────────────── */
