@@ -34,7 +34,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onUserChange, onSwi
 
   useEffect(() => {
     fetchJson<any[]>('/users').then(setUsers).catch(console.error);
-    fetchJson<any>('/health').then(d => setDbStatus(d.database)).catch(console.error);
+
+    const checkHealth = () => {
+      fetchJson<any>('/health')
+        .then(d => {
+          if (d && d.database) {
+            setDbStatus(d.database);
+          }
+        })
+        .catch(() => {
+          setDbStatus({ connected: false });
+        });
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

@@ -353,6 +353,16 @@ export const Home: React.FC<HomeProps> = ({ currentUser }) => {
 
   useEffect(() => { loadAll(); }, [currentUser]);
 
+  // If initial load returned empty (e.g. backend was waking up from cold sleep), retry automatically
+  useEffect(() => {
+    if (movies.length === 0 && !loading) {
+      const retryTimer = setTimeout(() => {
+        loadAll();
+      }, 3500);
+      return () => clearTimeout(retryTimer);
+    }
+  }, [movies.length, loading]);
+
   // Derived data
   const trending = [...movies].sort((a, b) => b.rating_count - a.rating_count).slice(0, 12);
   const topRated = [...movies].sort((a, b) => b.avg_rating - a.avg_rating).slice(0, 12);
