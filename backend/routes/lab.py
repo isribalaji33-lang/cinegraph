@@ -129,44 +129,46 @@ def _extract_cytoscape_graph(records: List[Dict[str, Any]]) -> Dict[str, List[Di
     edge_set = set()
 
     for idx, rec in enumerate(records):
-        prev_node_id = None
-        for key, val in rec.items():
-            if val is None or isinstance(val, (int, float)) and key.endswith("rating"):
-                continue
+        entity_chain = []
+        rel_label = rec.get("interaction") or rec.get("interaction_type") or "CONNECTED_TO"
+        rating_val = rec.get("rating") or rec.get("rating_value") or rec.get("peer_rating")
 
-            # Determine label and id
-            label = "Property"
-            node_id = f"{key}_{val}"
-            display_name = str(val)
+        for key, val in rec.items():
+            if val is None or key in [
+                "interaction", "interaction_type", "activity_date", "rating",
+                "rating_value", "rating_date", "added_date", "watch_date",
+                "year", "co_appearances", "count", "user_avg_rating"
+            ]:
+                continue
 
             if isinstance(val, list):
                 for item in val:
                     sub_id = f"{key}_{item}"
                     if sub_id not in nodes:
                         nodes[sub_id] = {"data": {"id": sub_id, "label": str(item), "type": key, "color": "#10b981"}}
-                    if prev_node_id:
-                        edge_key = f"{prev_node_id}->{sub_id}"
-                        if edge_key not in edge_set:
-                            edge_set.add(edge_key)
-                            edges.append({"data": {"id": f"e_{len(edges)}", "source": prev_node_id, "target": sub_id, "label": key}})
+                    entity_chain.append(sub_id)
                 continue
 
+            node_id = f"{key}_{val}"
+            display_name = str(val)
+
             color = "#3b82f6"
+            label = "Property"
             if "user" in key:
                 label = "User"
-                color = "#8b5cf6" # purple
+                color = "#8b5cf6"  # purple
             elif "movie" in key or "film" in key:
                 label = "Movie"
-                color = "#ef4444" # red/amber
+                color = "#ef4444"  # red
             elif "actor" in key:
                 label = "Actor"
-                color = "#10b981" # emerald
+                color = "#10b981"  # emerald
             elif "director" in key:
                 label = "Director"
-                color = "#f59e0b" # gold
+                color = "#f59e0b"  # gold
             elif "genre" in key:
                 label = "Genre"
-                color = "#06b6d4" # cyan
+                color = "#06b6d4"  # cyan
 
             if node_id not in nodes:
                 nodes[node_id] = {
@@ -177,23 +179,31 @@ def _extract_cytoscape_graph(records: List[Dict[str, Any]]) -> Dict[str, List[Di
                         "color": color
                     }
                 }
+            entity_chain.append(node_id)
 
-            if prev_node_id and prev_node_id != node_id:
-                edge_key = f"{prev_node_id}->{node_id}"
+        # Connect sequential entities in this record
+        for i in range(len(entity_chain) - 1):
+            src = entity_chain[i]
+            tgt = entity_chain[i + 1]
+            if src != tgt:
+                edge_key = f"{src}->{tgt}"
                 if edge_key not in edge_set:
                     edge_set.add(edge_key)
+                    lbl = str(rel_label)
+                    if rating_val and rating_val != "N/A" and "user" in src and "movie" in tgt:
+                        lbl = f"{rel_label} ({rating_val}★)"
+
                     edges.append({
                         "data": {
                             "id": f"e_{len(edges)}",
-                            "source": prev_node_id,
-                            "target": node_id,
-                            "label": key
+                            "source": src,
+                            "target": tgt,
+                            "label": lbl
                         }
                     })
-
-            prev_node_id = node_id
 
     return {
         "nodes": list(nodes.values()),
         "edges": edges
+    }
     }
