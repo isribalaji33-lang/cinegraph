@@ -189,6 +189,25 @@ CYPHER_QUERIES = {
 # Live Lab Curated Query Catalogue (Allowlisted, parameter-supported queries with traversal paths)
 LIVE_LAB_QUERIES = [
     {
+        "id": "lab_live_mutations",
+        "title": "⚡ Live Profile Activity & Database Feed",
+        "description": "Inspect real-time Neo4j graph mutations: ratings, watchlist additions, and watch logs for the active user profile.",
+        "path_pattern": "User(active) → [:RATED | :ADDED_TO_WATCHLIST | :WATCHED] → Movie in Neo4j",
+        "traversal_hops": [
+            {"hop": 1, "from": "User (Active Profile)", "rel": "RATED / WATCHLIST / WATCHED", "to": "Movie Node"}
+        ],
+        "cypher": """MATCH (u:User {user_id: $user_id})-[r]->(m:Movie)
+WHERE type(r) IN ['RATED', 'ADDED_TO_WATCHLIST', 'WATCHED']
+RETURN u.username AS user,
+       type(r) AS interaction,
+       m.title AS movie,
+       coalesce(r.rating_value, 'N/A') AS rating,
+       coalesce(r.rating_date, r.added_date, r.watch_date, 'recent') AS activity_date
+ORDER BY activity_date DESC, movie ASC
+LIMIT 15""",
+        "default_params": {"user_id": "u01"}
+    },
+    {
         "id": "lab_collab_traversal",
         "title": "2-Hop Collaborative Taste Traversal",
         "description": "Traverse from target user to co-raters who also rated their favorite movies 5★, then discover candidates those peers rated 5★.",

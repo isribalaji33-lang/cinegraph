@@ -48,7 +48,7 @@ export const App: React.FC = () => {
             <Routes>
             <Route path="/"                element={<Home currentUser={currentUser} />} />
             <Route path="/recommendations" element={<Recommendations currentUser={currentUser} />} />
-            <Route path="/lab"             element={<LiveLab />} />
+            <Route path="/lab"             element={<LiveLab currentUser={currentUser} />} />
             <Route path="/compare"         element={<CompareUsers />} />
             <Route path="/ml-eval"         element={<MLEvaluation />} />
             <Route path="/explore"         element={<GraphExplorer />} />

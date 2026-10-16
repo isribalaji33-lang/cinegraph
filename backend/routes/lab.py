@@ -36,13 +36,15 @@ def execute_lab_query(req: LiveLabQueryRequest):
     if req.query_id:
         curated = next((q for q in LIVE_LAB_QUERIES if q["id"] == req.query_id), None)
         if curated:
-            cypher = curated["cypher"]
             traversal_walkthrough = curated.get("traversal_hops")
             merged_params = dict(curated.get("default_params", {}))
             merged_params.update(params)
             params = merged_params
+            if not cypher or not cypher.strip():
+                cypher = curated["cypher"]
         elif req.query_id in CYPHER_QUERIES:
-            cypher = CYPHER_QUERIES[req.query_id]
+            if not cypher or not cypher.strip():
+                cypher = CYPHER_QUERIES[req.query_id]
 
     if not cypher:
         raise HTTPException(status_code=400, detail="No query provided")
